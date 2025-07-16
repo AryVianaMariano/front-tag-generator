@@ -20,6 +20,9 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useState, useRef } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { MiniContainer } from './MiniContainer';
 
 // Item visual
 function SortableItem({ id }: { id: string }) {
@@ -83,6 +86,9 @@ export function MultiContainer() {
         'processoB',
     ]);
     const nextContainerIndex = useRef(3);
+    const [newContainerName, setNewContainerName] = useState('');
+    const [miniContainers, setMiniContainers] = useState<Record<string, string[]>>({});
+    const [miniContainerInputs, setMiniContainerInputs] = useState<Record<string, string>>({});
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -169,13 +175,51 @@ export function MultiContainer() {
     };
 
     const handleAddContainer = () => {
-        const newId = `processo${nextContainerIndex.current}`;
+        const baseName = newContainerName.trim() || `processo${nextContainerIndex.current}`;
+        const newId = baseName;
         nextContainerIndex.current += 1;
         setContainers((prev) => ({
             ...prev,
             [newId]: [],
         }));
         setContainerOrder((prev) => [...prev, newId]);
+        setNewContainerName('');
+    };
+
+    const handleDeleteContainer = (id: string) => {
+        setContainers((prev) => {
+            const newState = { ...prev };
+            delete newState[id];
+            return newState;
+        });
+        setContainerOrder((prev) => prev.filter((c) => c !== id));
+        setMiniContainers((prev) => {
+            const newState = { ...prev };
+            delete newState[id];
+            return newState;
+        });
+        setMiniContainerInputs((prev) => {
+            const newState = { ...prev };
+            delete newState[id];
+            return newState;
+        });
+    };
+
+    const handleAddMiniContainer = (containerId: string) => {
+        const name = (miniContainerInputs[containerId] || '').trim();
+        if (!name) return;
+        setMiniContainers((prev) => ({
+            ...prev,
+            [containerId]: [...(prev[containerId] || []), name],
+        }));
+        setMiniContainerInputs((prev) => ({ ...prev, [containerId]: '' }));
+    };
+
+    const handleDeleteMiniContainer = (containerId: string, id: string) => {
+        setMiniContainers((prev) => ({
+            ...prev,
+            [containerId]: (prev[containerId] || []).filter((m) => m !== id),
+        }));
     };
 
     return (
@@ -190,7 +234,17 @@ export function MultiContainer() {
                 <div className="flex gap-8">
                     {containerOrder.map((containerId) => (
                         <SortableContainer key={containerId} id={containerId}>
-                            <h2 className="text-lg font-bold text-center mb-2">{containerId}</h2>
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-lg font-bold">{containerId}</h2>
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    type="button"
+                                    onClick={() => handleDeleteContainer(containerId)}
+                                >
+                                    Delete
+                                </Button>
+                            </div>
                             <SortableContext items={containers[containerId]} strategy={verticalListSortingStrategy}>
                                 <div className="min-h-[150px] p-4 bg-gray-100 border rounded-md space-y-2">
                                     {containers[containerId].map((id) => (
@@ -198,17 +252,45 @@ export function MultiContainer() {
                                     ))}
                                 </div>
                             </SortableContext>
+                            <div className="space-y-2 mt-2">
+                                {miniContainers[containerId]?.map((mini) => (
+                                    <MiniContainer
+                                        key={mini}
+                                        id={mini}
+                                        name={mini}
+                                        onDelete={(id) => handleDeleteMiniContainer(containerId, id)}
+                                    />
+                                ))}
+                                <div className="flex gap-2">
+                                    <Input
+                                        value={miniContainerInputs[containerId] || ''}
+                                        onChange={(e) =>
+                                            setMiniContainerInputs((prev) => ({
+                                                ...prev,
+                                                [containerId]: e.target.value,
+                                            }))
+                                        }
+                                        placeholder="Nome do mini container"
+                                    />
+                                    <Button size="sm" type="button" onClick={() => handleAddMiniContainer(containerId)}>
+                                        Adicionar mini
+                                    </Button>
+                                </div>
+                            </div>
                         </SortableContainer>
                     ))}
                 </div>
             </SortableContext>
-            <button
-                type="button"
-                onClick={handleAddContainer}
-                className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md"
-            >
-                Adicionar Processo
-            </button>
+            <div className="mt-4 flex gap-2">
+                <Input
+                    value={newContainerName}
+                    onChange={(e) => setNewContainerName(e.target.value)}
+                    placeholder="Nome do processo"
+                />
+                <Button type="button" onClick={handleAddContainer}>
+                    Adicionar Processo
+                </Button>
+            </div>
         </DndContext>
     );
 }
