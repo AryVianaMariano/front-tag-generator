@@ -4,7 +4,6 @@ import {
     DndContext,
     DragEndEvent,
     DragOverEvent,
-    DragStartEvent,
     KeyboardSensor,
     PointerSensor,
     closestCenter,
@@ -16,10 +15,11 @@ import {
     sortableKeyboardCoordinates,
     useSortable,
     verticalListSortingStrategy,
+    horizontalListSortingStrategy,
     arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 // Item visual
 function SortableItem({ id }: { id: string }) {
@@ -44,21 +44,55 @@ function SortableItem({ id }: { id: string }) {
     );
 }
 
+// Container visual
+function SortableContainer({
+    id,
+    children,
+}: {
+    id: string;
+    children: React.ReactNode;
+}) {
+    const { attributes, listeners, setNodeRef, transform, transition } =
+        useSortable({ id });
+
+    const style = {
+        transform: CSS.Translate.toString(transform),
+        transition,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className="flex flex-col gap-2 w-60"
+        >
+            {children}
+        </div>
+    );
+}
+
 export function MultiContainer() {
-    const [containers, setContainers] = useState({
+    const [containers, setContainers] = useState<Record<string, string[]>>({
         processoA: ['Motor', 'Sensor'],
         processoB: ['CLP'],
     });
+    const [containerOrder, setContainerOrder] = useState<string[]>([
+        'processoA',
+        'processoB',
+    ]);
+    const nextContainerIndex = useRef(3);
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
-    const findContainerOf = (itemId: string): keyof typeof containers | null => {
+    const findContainerOf = (itemId: string): string | null => {
         return (
-            (Object.entries(containers).find(([, items]) =>
+            Object.entries(containers).find(([, items]) =>
                 items.includes(itemId)
-            )?.[0] as keyof typeof containers) ?? null
+            )?.[0] ?? null
         );
     };
 
@@ -68,12 +102,15 @@ export function MultiContainer() {
 
     const handleDragOver = ({ active, over }: DragOverEvent) => {
         if (!over) return;
+        if (containerOrder.includes(String(active.id))) {
+            return;
+        }
 
         const activeContainer = findContainerOf(String(active.id));
         let overContainer = findContainerOf(String(over.id));
 
         if (!overContainer && over.id in containers) {
-            overContainer = over.id as keyof typeof containers;
+            overContainer = String(over.id);
         }
 
         if (!activeContainer || !overContainer) return;
@@ -101,6 +138,15 @@ export function MultiContainer() {
     };
 
     const handleDragEnd = ({ active, over }: DragEndEvent) => {
+        if (over && containerOrder.includes(String(active.id)) && containerOrder.includes(String(over.id))) {
+            const oldIndex = containerOrder.indexOf(String(active.id));
+            const newIndex = containerOrder.indexOf(String(over.id));
+            if (oldIndex !== newIndex) {
+                setContainerOrder((prev) => arrayMove(prev, oldIndex, newIndex));
+            }
+            return;
+        }
+
         const activeContainer = findContainerOf(String(active.id));
         const overContainer = over ? findContainerOf(String(over.id)) : null;
 
@@ -122,6 +168,16 @@ export function MultiContainer() {
         // drag operation ended
     };
 
+    const handleAddContainer = () => {
+        const newId = `processo${nextContainerIndex.current}`;
+        nextContainerIndex.current += 1;
+        setContainers((prev) => ({
+            ...prev,
+            [newId]: [],
+        }));
+        setContainerOrder((prev) => [...prev, newId]);
+    };
+
     return (
         <DndContext
             sensors={sensors}
@@ -130,20 +186,29 @@ export function MultiContainer() {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
-            <div className="flex gap-8">
-                {Object.entries(containers).map(([containerId, items]) => (
-                    <div key={containerId} className="flex flex-col gap-2 w-60">
-                        <h2 className="text-lg font-bold text-center mb-2">{containerId}</h2>
-                        <SortableContext items={items} strategy={verticalListSortingStrategy}>
-                            <div className="min-h-[150px] p-4 bg-gray-100 border rounded-md space-y-2">
-                                {items.map((id) => (
-                                    <SortableItem key={id} id={id} />
-                                ))}
-                            </div>
-                        </SortableContext>
-                    </div>
-                ))}
-            </div>
+            <SortableContext items={containerOrder} strategy={horizontalListSortingStrategy}>
+                <div className="flex gap-8">
+                    {containerOrder.map((containerId) => (
+                        <SortableContainer key={containerId} id={containerId}>
+                            <h2 className="text-lg font-bold text-center mb-2">{containerId}</h2>
+                            <SortableContext items={containers[containerId]} strategy={verticalListSortingStrategy}>
+                                <div className="min-h-[150px] p-4 bg-gray-100 border rounded-md space-y-2">
+                                    {containers[containerId].map((id) => (
+                                        <SortableItem key={id} id={id} />
+                                    ))}
+                                </div>
+                            </SortableContext>
+                        </SortableContainer>
+                    ))}
+                </div>
+            </SortableContext>
+            <button
+                type="button"
+                onClick={handleAddContainer}
+                className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md"
+            >
+                Adicionar Processo
+            </button>
         </DndContext>
     );
 }
