@@ -18,7 +18,7 @@ export interface ColumnProps {
     id: string
     name: string
     children?: React.ReactNode
-    onAddItem: (name: string) => void
+    onAddItem?: (name: string) => void
 }
 
 export function Column({ children, id, name, onAddItem }: ColumnProps) {
@@ -33,7 +33,7 @@ export function Column({ children, id, name, onAddItem }: ColumnProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        if (!itemName.trim()) return
+        if (!itemName.trim() || !onAddItem) return
         onAddItem(itemName.trim())
         setItemName('')
     }
@@ -42,15 +42,17 @@ export function Column({ children, id, name, onAddItem }: ColumnProps) {
         <div style={styles} ref={ref}>
             <h2>{name}</h2>
             {children}
-            <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 4 }}>
-                <Input
-                    value={itemName}
-                    onChange={(e) => setItemName(e.target.value)}
-                    placeholder="New item"
-                    style={{ flex: 1 }}
-                />
-                <Button type="submit">Add</Button>
-            </form>
+            {onAddItem && (
+                <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 4 }}>
+                    <Input
+                        value={itemName}
+                        onChange={(e) => setItemName(e.target.value)}
+                        placeholder="New item"
+                        style={{ flex: 1 }}
+                    />
+                    <Button type="submit">Add</Button>
+                </form>
+            )}
         </div>
     )
 }

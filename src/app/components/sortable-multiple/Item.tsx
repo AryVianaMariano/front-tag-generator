@@ -1,5 +1,5 @@
 import React from 'react'
-import { useSortable } from '@dnd-kit/react/sortable'
+import { useSortable } from '@dnd-kit/sortable'
 
 export interface ItemData {
     id: string
@@ -13,13 +13,14 @@ export interface ItemProps {
 }
 
 export function Item({ item, column, index }: ItemProps) {
-    const { ref } = useSortable({
+    const { setNodeRef, attributes, listeners } = useSortable({
         id: item.id,
-        index,
-        group: column,
-        type: 'item',
-        accept: ['item'],
+        data: { column },
     })
 
-    return <button ref={ref}>{item.name}</button>
+    return (
+        <button ref={setNodeRef} {...attributes} {...listeners}>
+            {item.name}
+        </button>
+    )
 }

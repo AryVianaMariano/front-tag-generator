@@ -27,6 +27,7 @@ export function Example({ style = defaultStyles }: ExampleProps) {
         { id: 'C', name: 'Column C' },
     ])
     const [items, setItems] = React.useState<Record<string, ItemData[]>>({
+        library: [],
         A: [
             { id: 'A0', name: 'A0' },
             { id: 'A1', name: 'A1' },
@@ -47,10 +48,10 @@ export function Example({ style = defaultStyles }: ExampleProps) {
         setItems((it) => ({ ...it, [id]: [] }))
     }
 
-    const addItem = (columnId: string, name: string) => {
+    const addLibraryItem = (name: string) => {
         setItems((current) => ({
             ...current,
-            [columnId]: [...(current[columnId] || []), { id: uuidv4(), name }],
+            library: [...(current['library'] || []), { id: uuidv4(), name }],
         }))
     }
 
@@ -81,12 +82,7 @@ export function Example({ style = defaultStyles }: ExampleProps) {
             </form>
             <div style={style}>
                 {columns.map((column) => (
-                    <Column
-                        key={column.id}
-                        id={column.id}
-                        name={column.name}
-                        onAddItem={(name) => addItem(column.id, name)}
-                    >
+                    <Column key={column.id} id={column.id} name={column.name}>
                         {items[column.id]?.map((item, index) => (
                             <Item
                                 key={item.id}
@@ -97,6 +93,18 @@ export function Example({ style = defaultStyles }: ExampleProps) {
                         ))}
                     </Column>
                 ))}
+            </div>
+            <div style={{ marginTop: 40 }}>
+                <Column id="library" name="Library" onAddItem={addLibraryItem}>
+                    {items['library']?.map((item, index) => (
+                        <Item
+                            key={item.id}
+                            item={item}
+                            index={index}
+                            column="library"
+                        />
+                    ))}
+                </Column>
             </div>
         </DragDropProvider>
     )
