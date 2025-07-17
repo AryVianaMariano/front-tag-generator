@@ -202,11 +202,10 @@ export function MultiContainer() {
         }
 
         if (!activeItemContainer || !overItemContainer) return;
-
         if (activeItemContainer !== overItemContainer) {
             setItems((prev) => {
-                const activeItems = prev[activeItemContainer];
-                const overItems = prev[overItemContainer];
+                const activeItems = prev[activeItemContainer] ?? [];
+                const overItems = prev[overItemContainer] ?? [];
 
                 const overIndex = overItems.findIndex((i) => i.id === String(over.id));
                 const newIndex = overIndex >= 0 ? overIndex : overItems.length;
@@ -261,12 +260,14 @@ export function MultiContainer() {
         }
 
         if (over && activeItemContainer === overItemContainer) {
-            const activeIndex = items[activeItemContainer].findIndex((i) => i.id === String(active.id));
-            const overIndex = items[overItemContainer!].findIndex((i) => i.id === String(over.id));
+            const activeList = items[activeItemContainer] ?? [];
+            const overList = items[overItemContainer!] ?? [];
+            const activeIndex = activeList.findIndex((i) => i.id === String(active.id));
+            const overIndex = overList.findIndex((i) => i.id === String(over.id));
             if (activeIndex !== overIndex) {
                 setItems((prev) => ({
                     ...prev,
-                    [activeItemContainer]: arrayMove(prev[activeItemContainer], activeIndex, overIndex),
+                    [activeItemContainer]: arrayMove(prev[activeItemContainer] ?? [], activeIndex, overIndex),
                 }));
             }
         }
@@ -286,6 +287,14 @@ export function MultiContainer() {
         setContainers((prev) => ({
             ...prev,
             [newId]: [],
+        }));
+        setItems((prev) => ({
+            ...prev,
+            [newId]: [],
+        }));
+        setItemInputs((prev) => ({
+            ...prev,
+            [newId]: '',
         }));
         setContainerOrder((prev) => [...prev, newId]);
         setNewContainerName('');
@@ -393,8 +402,12 @@ export function MultiContainer() {
                                             }}
                                             placeholder="Nome do item"
                                         />
-                                        <Button size="sm" type="button" onClick={() => handleAddItem(containerId)}>
-                                            Adicionar item
+                                        <Button
+                                            size="sm"
+                                            type="button"
+                                            onPointerDown={(e) => e.stopPropagation()}
+                                            onClick={() => handleAddItem(containerId)}
+                                        >                                            Adicionar item
                                         </Button>
                                     </div>
                                 </div>
@@ -416,8 +429,11 @@ export function MultiContainer() {
                     }}
                     placeholder="Nome do processo"
                 />
-                <Button type="button" onClick={handleAddContainer}>
-                    Adicionar Processo
+                <Button
+                    type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={handleAddContainer}
+                >                    Adicionar Processo
                 </Button>
             </div>
         </DndContext>
