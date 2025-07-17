@@ -8,17 +8,10 @@ import { v4 as uuidv4 } from 'uuid'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { DraggableItem } from '../DraggableItem'
+import { SortableContainer } from './SortableContainer'
+import { Container, Item } from './types'
 
-interface Container {
-    id: string
-    name: string
-    items: Item[]
-}
 
-interface Item {
-    id: string
-    name: string
-}
 
 function DroppableZone({ id, children, className }: { id: string; children: React.ReactNode; className?: string }) {
     const { setNodeRef } = useDroppable({ id })
@@ -45,6 +38,19 @@ export function ItemManager() {
 
     const handleDragEnd = ({ active, over }: DragEndEvent) => {
         if (!over) return
+
+        // allow reordering of droppable containers
+        const isContainerActive = containers.some((c) => c.id === active.id)
+        const isContainerOver = containers.some((c) => c.id === over.id)
+        if (isContainerActive && isContainerOver) {
+            const oldIndex = containers.findIndex((c) => c.id === active.id)
+            const newIndex = containers.findIndex((c) => c.id === over.id)
+            if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+                setContainers((items) => arrayMove(items, oldIndex, newIndex))
+            }
+            return
+        }
+
         const origin = findContainerOf(String(active.id))
         const overContainer = findContainerOf(String(over.id))
         const destination = overContainer ?? String(over.id)
@@ -167,30 +173,27 @@ export function ItemManager() {
                     </Button>
                 </div>
                 <div className="flex gap-8 mt-4">
-                    <DroppableZone id="available" className="space-y-2 w-60 min-h-[150px] border rounded-md p-4">
-                        <SortableContext items={availableItems.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-                            <h2 className="font-bold mb-2">Itens Disponíveis</h2>
-                            {availableItems.map((item) => (
-                                <DraggableItem key={item.id} id={item.id} name={item.name} onDelete={handleDeleteItem} />
-                            ))}
-                        </SortableContext>
-                    </DroppableZone>
-                    {containers.map((container) => (
-                        <DroppableZone key={container.id} id={container.id} className="space-y-2 w-60 min-h-[150px] border rounded-md p-4">
-                            <SortableContext items={container.items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-                                <div className="flex items-center justify-between mb-2">
-                                    <h2 className="font-bold">{container.name}</h2>
-                                    <Button variant="destructive" size="sm" type="button" onClick={() => handleDeleteContainer(container.id)}>
-                                        Delete
-                                    </Button>
-                                </div>
-                                {container.items.map((item) => (
-                                    <DraggableItem key={item.id} id={item.id} name={item.name} onDelete={handleDeleteItem} />
-                                ))}
-                            </SortableContext>
-                        </DroppableZone>
-                    ))}
+                    <SortableContext items={containers.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                        {containers.map((container) => (
+                            <SortableContainer
+                                key={container.id}
+                                container={container}
+                                onDeleteContainer={handleDeleteContainer}
+                                onDeleteItem={handleDeleteItem}
+                            />
+                        ))}
+                    </SortableContext>
                 </div>
+            </div>
+            <div className="fixed bottom-4 left-4 w-60">
+                <DroppableZone id="available" className="space-y-2 min-h-[150px] border rounded-md p-4 bg-white">
+                    <SortableContext items={availableItems.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                        <h2 className="font-bold mb-2">Itens Disponíveis</h2>
+                        {availableItems.map((item) => (
+                            <DraggableItem key={item.id} id={item.id} name={item.name} onDelete={handleDeleteItem} />
+                        ))}
+                    </SortableContext>
+                </DroppableZone>
             </div>
         </DndContext>
     )
