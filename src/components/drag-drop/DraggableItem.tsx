@@ -1,12 +1,12 @@
 'use client'
 
-interface MiniContainerProps {
+interface DraggableItemProps {
     id: string
     name: string
     onDelete: (id: string) => void
 }
 
-export function MiniContainer({ id, name, onDelete }: MiniContainerProps) {
+export function DraggableItem({ id, name, onDelete }: DraggableItemProps) {
     return (
         <div className="bg-gray-200 rounded-md p-2 flex items-center justify-between text-sm">
             <span>{name}</span>

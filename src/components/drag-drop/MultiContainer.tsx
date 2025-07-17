@@ -22,7 +22,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MiniContainer } from './MiniContainer';
+import { DraggableItem } from './DraggableItem';
 
 // Item visual
 function SortableItem({ id }: { id: string }) {
@@ -81,8 +81,8 @@ export function MultiContainer() {
     const [containerOrder, setContainerOrder] = useState<string[]>([]);
     const nextContainerIndex = useRef(1);
     const [newContainerName, setNewContainerName] = useState('');
-    const [miniContainers, setMiniContainers] = useState<Record<string, string[]>>({});
-    const [miniContainerInputs, setMiniContainerInputs] = useState<Record<string, string>>({});
+    const [items, setItems] = useState<Record<string, string[]>>({});
+    const [itemInputs, setItemInputs] = useState<Record<string, string>>({});
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -90,9 +90,9 @@ export function MultiContainer() {
 
     useEffect(() => {
         async function loadData() {
-            const [containersRes, miniRes] = await Promise.all([
+            const [containersRes, itemsRes] = await Promise.all([
                 fetch('/api/containers'),
-                fetch('/api/mini-containers'),
+                fetch('/api/items'),
             ])
 
             if (containersRes.ok) {
@@ -107,9 +107,9 @@ export function MultiContainer() {
                         : Object.keys(data.containers || {}).length) + 1
             }
 
-            if (miniRes.ok) {
-                const data = await miniRes.json()
-                setMiniContainers(data.miniContainers || {})
+            if (itemsRes.ok) {
+                const data = await itemsRes.json()
+                setItems(data.items || {})
             }
         }
 
@@ -126,13 +126,13 @@ export function MultiContainer() {
     }, [containers, containerOrder])
 
     useEffect(() => {
-        const data = { miniContainers }
-        fetch('/api/mini-containers', {
+        const data = { items }
+        fetch('/api/items', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         })
-    }, [miniContainers])
+    }, [items])
 
     const findContainerOf = (itemId: string): string | null => {
         return (
@@ -233,13 +233,13 @@ export function MultiContainer() {
             return updated;
         });
 
-        setMiniContainers((prev) => {
+        setItems((prev) => {
             const updated = { ...prev };
             delete updated[id];
             return updated;
         });
 
-        setMiniContainerInputs((prev) => {
+        setItemInputs((prev) => {
             const updated = { ...prev };
             delete updated[id];
             return updated;
@@ -248,18 +248,18 @@ export function MultiContainer() {
         setContainerOrder((prev) => prev.filter((c) => c !== id));
     };
 
-    const handleAddMiniContainer = (containerId: string) => {
-        const name = (miniContainerInputs[containerId] || '').trim();
+    const handleAddItem = (containerId: string) => {
+        const name = (itemInputs[containerId] || '').trim();
         if (!name) return;
-        setMiniContainers((prev) => ({
+        setItems((prev) => ({
             ...prev,
             [containerId]: [...(prev[containerId] || []), name],
         }));
-        setMiniContainerInputs((prev) => ({ ...prev, [containerId]: '' }));
+        setItemInputs((prev) => ({ ...prev, [containerId]: '' }));
     };
 
-    const handleDeleteMiniContainer = (containerId: string, id: string) => {
-        setMiniContainers((prev) => ({
+    const handleDeleteItem = (containerId: string, id: string) => {
+        setItems((prev) => ({
             ...prev,
             [containerId]: (prev[containerId] || []).filter((m) => m !== id),
         }));
@@ -297,20 +297,20 @@ export function MultiContainer() {
                                 </div>
                             </SortableContext>
                             <div className="space-y-2 mt-2">
-                                {miniContainers[containerId]?.map((mini) => (
-                                    <MiniContainer
+                                {items[containerId]?.map((mini) => (
+                                    <DraggableItem
                                         key={mini}
                                         id={mini}
                                         name={mini}
-                                        onDelete={(id) => handleDeleteMiniContainer(containerId, id)}
+                                        onDelete={(id) => handleDeleteItem(containerId, id)}
                                     />
                                 ))}
                                 <div className="flex gap-2">
                                     <Input
-                                        value={miniContainerInputs[containerId] || ''}
+                                        value={itemInputs[containerId] || ''}
                                         onPointerDown={(e) => e.stopPropagation()}
                                         onChange={(e) =>
-                                            setMiniContainerInputs((prev) => ({
+                                            setItemInputs((prev) => ({
                                                 ...prev,
                                                 [containerId]: e.target.value,
                                             }))
@@ -318,13 +318,13 @@ export function MultiContainer() {
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault()
-                                                handleAddMiniContainer(containerId)
+                                                handleAddItem(containerId)
                                             }
                                         }}
-                                        placeholder="Nome do mini container"
+                                        placeholder="Nome do item"
                                     />
-                                    <Button size="sm" type="button" onClick={() => handleAddMiniContainer(containerId)}>
-                                        Adicionar mini
+                                    <Button size="sm" type="button" onClick={() => handleAddItem(containerId)}>
+                                        Adicionar item
                                     </Button>
                                 </div>
                             </div>
