@@ -1,5 +1,11 @@
 {
-  "containers": {},
+  "containers": {
+    "teste": [],
+    "processo6": []
+  },
   "miniContainers": {},
-  "containerOrder": []
+  "containerOrder": [
+    "teste",
+    "processo6"
+  ]
 }

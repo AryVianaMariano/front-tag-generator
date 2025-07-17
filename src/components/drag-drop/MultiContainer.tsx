@@ -204,30 +204,25 @@ export function MultiContainer() {
     };
 
     const handleDeleteContainer = (id: string) => {
-        setContainerOrder((prevOrder) => {
-            const newOrder = prevOrder.filter((c) => c !== id);
-
-            // Após atualizar a ordem, atualize containers e miniContainers em seguida
-            setContainers((prevContainers) => {
-                const updated = { ...prevContainers };
-                delete updated[id];
-                return updated;
-            });
-
-            setMiniContainers((prevMini) => {
-                const updated = { ...prevMini };
-                delete updated[id];
-                return updated;
-            });
-
-            setMiniContainerInputs((prevInputs) => {
-                const updated = { ...prevInputs };
-                delete updated[id];
-                return updated;
-            });
-
-            return newOrder;
+        setContainers((prev) => {
+            const updated = { ...prev };
+            delete updated[id];
+            return updated;
         });
+
+        setMiniContainers((prev) => {
+            const updated = { ...prev };
+            delete updated[id];
+            return updated;
+        });
+
+        setMiniContainerInputs((prev) => {
+            const updated = { ...prev };
+            delete updated[id];
+            return updated;
+        });
+
+        setContainerOrder((prev) => prev.filter((c) => c !== id));
     };
 
     const handleAddMiniContainer = (containerId: string) => {
@@ -265,6 +260,7 @@ export function MultiContainer() {
                                     size="sm"
                                     variant="destructive"
                                     type="button"
+                                    onPointerDown={(e) => e.stopPropagation()}
                                     onClick={() => handleDeleteContainer(containerId)}
                                 >
                                     Delete

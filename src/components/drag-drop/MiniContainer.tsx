@@ -12,6 +12,7 @@ export function MiniContainer({ id, name, onDelete }: MiniContainerProps) {
             <span>{name}</span>
             <button
                 type="button"
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => onDelete(id)}
                 className="text-red-500 text-xs"
             >
