@@ -25,6 +25,11 @@ const items = [
         icon: Move,
     },
     {
+        title: "Processos",
+        url: "/multi-dnd",
+        icon: Move,
+    },
+    {
         title: "Inbox",
         url: "#",
         icon: Inbox,
