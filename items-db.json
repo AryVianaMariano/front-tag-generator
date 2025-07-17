@@ -1,3 +1,10 @@
 {
-  "items": {}
+  "items": {
+    "teste": [
+      {
+        "id": "df5d91b1-658e-4860-99d3-c5a9738b923e",
+        "name": "teste"
+      }
+    ]
+  }
 }

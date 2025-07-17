@@ -1,4 +1,8 @@
 {
-  "containers": {},
-  "containerOrder": []
+  "containers": {
+    "teste": []
+  },
+  "containerOrder": [
+    "teste"
+  ]
 }
