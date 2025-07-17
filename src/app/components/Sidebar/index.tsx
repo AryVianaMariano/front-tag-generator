@@ -20,13 +20,8 @@ const items = [
         icon: Home,
     },
     {
-        title: "Drag Demo",
-        url: "/free-drag",
-        icon: Move,
-    },
-    {
-        title: "Processos",
-        url: "/multi-dnd",
+        title: "Item Manager",
+        url: "/item-manager",
         icon: Move,
     },
     {
