@@ -142,6 +142,12 @@ export function MultiContainer() {
         );
     };
 
+    const findItemContainerOf = (itemId: string): string | null => {
+        return (
+            Object.entries(items).find(([, list]) => list.includes(itemId))?.[0] ?? null
+        )
+    }
+
     const handleDragStart = () => {
         // Intentionally left blank but reserved for future use
     };
@@ -159,21 +165,50 @@ export function MultiContainer() {
             overContainer = String(over.id);
         }
 
-        if (!activeContainer || !overContainer) return;
+        if (activeContainer && overContainer) {
+            if (activeContainer !== overContainer) {
+                setContainers((prev) => {
+                    const activeItems = prev[activeContainer];
+                    const overItems = prev[overContainer];
 
-        if (activeContainer !== overContainer) {
-            setContainers((prev) => {
-                const activeItems = prev[activeContainer];
-                const overItems = prev[overContainer];
+                    const overIndex = overItems.indexOf(String(over.id));
+                    const newIndex = overIndex >= 0 ? overIndex : overItems.length;
+
+                    return {
+                        ...prev,
+                        [activeContainer]: activeItems.filter((i) => i !== active.id),
+                        [overContainer]: [
+                            ...overItems.slice(0, newIndex),
+                            String(active.id),
+                            ...overItems.slice(newIndex),
+                        ],
+                    };
+                });
+            }
+            return;
+        }
+
+        const activeItemContainer = findItemContainerOf(String(active.id));
+        let overItemContainer = findItemContainerOf(String(over.id));
+
+        if (!overItemContainer && over.id in items) {
+            overItemContainer = String(over.id);
+        }
+
+        if (!activeItemContainer || !overItemContainer) return;
+
+        if (activeItemContainer !== overItemContainer) {
+            setItems((prev) => {
+                const activeItems = prev[activeItemContainer];
+                const overItems = prev[overItemContainer];
 
                 const overIndex = overItems.indexOf(String(over.id));
-
                 const newIndex = overIndex >= 0 ? overIndex : overItems.length;
 
                 return {
                     ...prev,
-                    [activeContainer]: activeItems.filter((i) => i !== active.id),
-                    [overContainer]: [
+                    [activeItemContainer]: activeItems.filter((i) => i !== active.id),
+                    [overItemContainer]: [
                         ...overItems.slice(0, newIndex),
                         String(active.id),
                         ...overItems.slice(newIndex),
@@ -196,17 +231,34 @@ export function MultiContainer() {
         const activeContainer = findContainerOf(String(active.id));
         const overContainer = over ? findContainerOf(String(over.id)) : null;
 
-        if (!activeContainer) {
+        if (activeContainer) {
+            if (over && activeContainer === overContainer) {
+                const activeIndex = containers[activeContainer].indexOf(String(active.id));
+                const overIndex = containers[overContainer!].indexOf(String(over.id));
+                if (activeIndex !== overIndex) {
+                    setContainers((prev) => ({
+                        ...prev,
+                        [activeContainer]: arrayMove(prev[activeContainer], activeIndex, overIndex),
+                    }));
+                }
+            }
             return;
         }
 
-        if (over && activeContainer === overContainer) {
-            const activeIndex = containers[activeContainer].indexOf(String(active.id));
-            const overIndex = containers[overContainer!].indexOf(String(over.id));
+        const activeItemContainer = findItemContainerOf(String(active.id));
+        const overItemContainer = over ? findItemContainerOf(String(over.id)) : null;
+
+        if (!activeItemContainer) {
+            return;
+        }
+
+        if (over && activeItemContainer === overItemContainer) {
+            const activeIndex = items[activeItemContainer].indexOf(String(active.id));
+            const overIndex = items[overItemContainer!].indexOf(String(over.id));
             if (activeIndex !== overIndex) {
-                setContainers((prev) => ({
+                setItems((prev) => ({
                     ...prev,
-                    [activeContainer]: arrayMove(prev[activeContainer], activeIndex, overIndex),
+                    [activeItemContainer]: arrayMove(prev[activeItemContainer], activeIndex, overIndex),
                 }));
             }
         }
@@ -296,38 +348,40 @@ export function MultiContainer() {
                                     ))}
                                 </div>
                             </SortableContext>
-                            <div className="space-y-2 mt-2">
-                                {items[containerId]?.map((mini) => (
-                                    <DraggableItem
-                                        key={mini}
-                                        id={mini}
-                                        name={mini}
-                                        onDelete={(id) => handleDeleteItem(containerId, id)}
-                                    />
-                                ))}
-                                <div className="flex gap-2">
-                                    <Input
-                                        value={itemInputs[containerId] || ''}
-                                        onPointerDown={(e) => e.stopPropagation()}
-                                        onChange={(e) =>
-                                            setItemInputs((prev) => ({
-                                                ...prev,
-                                                [containerId]: e.target.value,
-                                            }))
-                                        }
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault()
-                                                handleAddItem(containerId)
+                            <SortableContext items={items[containerId] || []} strategy={verticalListSortingStrategy}>
+                                <div className="space-y-2 mt-2">
+                                    {items[containerId]?.map((mini) => (
+                                        <DraggableItem
+                                            key={mini}
+                                            id={mini}
+                                            name={mini}
+                                            onDelete={(id) => handleDeleteItem(containerId, id)}
+                                        />
+                                    ))}
+                                    <div className="flex gap-2">
+                                        <Input
+                                            value={itemInputs[containerId] || ''}
+                                            onPointerDown={(e) => e.stopPropagation()}
+                                            onChange={(e) =>
+                                                setItemInputs((prev) => ({
+                                                    ...prev,
+                                                    [containerId]: e.target.value,
+                                                }))
                                             }
-                                        }}
-                                        placeholder="Nome do item"
-                                    />
-                                    <Button size="sm" type="button" onClick={() => handleAddItem(containerId)}>
-                                        Adicionar item
-                                    </Button>
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault()
+                                                    handleAddItem(containerId)
+                                                }
+                                            }}
+                                            placeholder="Nome do item"
+                                        />
+                                        <Button size="sm" type="button" onClick={() => handleAddItem(containerId)}>
+                                            Adicionar item
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
+                            </SortableContext>
                         </SortableContainer>
                     ))}
                 </div>
