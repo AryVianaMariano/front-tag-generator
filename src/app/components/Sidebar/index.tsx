@@ -20,8 +20,8 @@ const items = [
         icon: Home,
     },
     {
-        title: "Tree Manager",
-        url: "/tree",
+        title: "SortableExamplePage",
+        url: "/sortable-example",
         icon: Move,
     },
     {
