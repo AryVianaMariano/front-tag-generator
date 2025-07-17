@@ -315,6 +315,12 @@ export function MultiContainer() {
                                                 [containerId]: e.target.value,
                                             }))
                                         }
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault()
+                                                handleAddMiniContainer(containerId)
+                                            }
+                                        }}
                                         placeholder="Nome do mini container"
                                     />
                                     <Button size="sm" type="button" onClick={() => handleAddMiniContainer(containerId)}>
@@ -331,6 +337,12 @@ export function MultiContainer() {
                     value={newContainerName}
                     onPointerDown={(e) => e.stopPropagation()}
                     onChange={(e) => setNewContainerName(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleAddContainer()
+                        }
+                    }}
                     placeholder="Nome do processo"
                 />
                 <Button type="button" onClick={handleAddContainer}>

@@ -1,3 +1,7 @@
 {
-  "miniContainers": {}
+  "miniContainers": {
+    "teste": [
+      "teste"
+    ]
+  }
 }
