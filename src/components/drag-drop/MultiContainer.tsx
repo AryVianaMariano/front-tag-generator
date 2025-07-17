@@ -308,6 +308,7 @@ export function MultiContainer() {
                                 <div className="flex gap-2">
                                     <Input
                                         value={miniContainerInputs[containerId] || ''}
+                                        onPointerDown={(e) => e.stopPropagation()}
                                         onChange={(e) =>
                                             setMiniContainerInputs((prev) => ({
                                                 ...prev,
@@ -328,6 +329,7 @@ export function MultiContainer() {
             <div className="mt-4 flex gap-2">
                 <Input
                     value={newContainerName}
+                    onPointerDown={(e) => e.stopPropagation()}
                     onChange={(e) => setNewContainerName(e.target.value)}
                     placeholder="Nome do processo"
                 />
