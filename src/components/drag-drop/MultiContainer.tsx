@@ -19,7 +19,7 @@ import {
     arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { MiniContainer } from './MiniContainer';
@@ -77,15 +77,9 @@ function SortableContainer({
 }
 
 export function MultiContainer() {
-    const [containers, setContainers] = useState<Record<string, string[]>>({
-        processoA: ['Motor', 'Sensor'],
-        processoB: ['CLP'],
-    });
-    const [containerOrder, setContainerOrder] = useState<string[]>([
-        'processoA',
-        'processoB',
-    ]);
-    const nextContainerIndex = useRef(3);
+    const [containers, setContainers] = useState<Record<string, string[]>>({});
+    const [containerOrder, setContainerOrder] = useState<string[]>([]);
+    const nextContainerIndex = useRef(1);
     const [newContainerName, setNewContainerName] = useState('');
     const [miniContainers, setMiniContainers] = useState<Record<string, string[]>>({});
     const [miniContainerInputs, setMiniContainerInputs] = useState<Record<string, string>>({});
@@ -93,6 +87,29 @@ export function MultiContainer() {
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
+
+    useEffect(() => {
+        async function loadData() {
+            const res = await fetch('/api/containers');
+            if (res.ok) {
+                const data = await res.json();
+                setContainers(data.containers || {});
+                setMiniContainers(data.miniContainers || {});
+                setContainerOrder(data.containerOrder || Object.keys(data.containers || {}));
+                nextContainerIndex.current = (data.containerOrder ? data.containerOrder.length : Object.keys(data.containers || {}).length) + 1;
+            }
+        }
+        loadData();
+    }, []);
+
+    useEffect(() => {
+        const data = { containers, miniContainers, containerOrder };
+        fetch('/api/containers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+    }, [containers, miniContainers, containerOrder]);
 
     const findContainerOf = (itemId: string): string | null => {
         return (
@@ -187,21 +204,29 @@ export function MultiContainer() {
     };
 
     const handleDeleteContainer = (id: string) => {
-        setContainers((prev) => {
-            const newState = { ...prev };
-            delete newState[id];
-            return newState;
-        });
-        setContainerOrder((prev) => prev.filter((c) => c !== id));
-        setMiniContainers((prev) => {
-            const newState = { ...prev };
-            delete newState[id];
-            return newState;
-        });
-        setMiniContainerInputs((prev) => {
-            const newState = { ...prev };
-            delete newState[id];
-            return newState;
+        setContainerOrder((prevOrder) => {
+            const newOrder = prevOrder.filter((c) => c !== id);
+
+            // Após atualizar a ordem, atualize containers e miniContainers em seguida
+            setContainers((prevContainers) => {
+                const updated = { ...prevContainers };
+                delete updated[id];
+                return updated;
+            });
+
+            setMiniContainers((prevMini) => {
+                const updated = { ...prevMini };
+                delete updated[id];
+                return updated;
+            });
+
+            setMiniContainerInputs((prevInputs) => {
+                const updated = { ...prevInputs };
+                delete updated[id];
+                return updated;
+            });
+
+            return newOrder;
         });
     };
 
