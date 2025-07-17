@@ -9,6 +9,7 @@ import { Item, ItemData } from './Item'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { v4 as uuidv4 } from 'uuid'
+import { SortableContext } from '@dnd-kit/sortable'
 
 const defaultStyles: React.CSSProperties = {
     display: 'inline-flex',
@@ -83,27 +84,31 @@ export function Example({ style = defaultStyles }: ExampleProps) {
             <div style={style}>
                 {columns.map((column) => (
                     <Column key={column.id} id={column.id} name={column.name}>
-                        {items[column.id]?.map((item, index) => (
-                            <Item
-                                key={item.id}
-                                item={item}
-                                index={index}
-                                column={column.id}
-                            />
-                        ))}
+                        <SortableContext items={items[column.id].map((i) => i.id)} id={column.id}>
+                            {items[column.id]?.map((item, index) => (
+                                <Item
+                                    key={item.id}
+                                    item={item}
+                                    index={index}
+                                    column={column.id}
+                                />
+                            ))}
+                        </SortableContext>
                     </Column>
                 ))}
             </div>
             <div style={{ marginTop: 40 }}>
                 <Column id="library" name="Library" onAddItem={addLibraryItem}>
-                    {items['library']?.map((item, index) => (
-                        <Item
-                            key={item.id}
-                            item={item}
-                            index={index}
-                            column="library"
-                        />
-                    ))}
+                    <SortableContext items={items['library'].map((i) => i.id)} id="library">
+                        {items['library']?.map((item, index) => (
+                            <Item
+                                key={item.id}
+                                item={item}
+                                index={index}
+                                column="library"
+                            />
+                        ))}
+                    </SortableContext>
                 </Column>
             </div>
         </DragDropProvider>

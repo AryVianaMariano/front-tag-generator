@@ -9,13 +9,12 @@ export interface ItemData {
 export interface ItemProps {
     item: ItemData
     column: string
-    index: number
 }
 
-export function Item({ item, column, index }: ItemProps) {
+export function Item({ item, column }: ItemProps) {
     const { setNodeRef, attributes, listeners } = useSortable({
         id: item.id,
-        data: { column },
+        data: { column, type: 'item' },
     })
 
     return (

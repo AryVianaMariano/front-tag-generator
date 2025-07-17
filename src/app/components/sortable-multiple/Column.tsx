@@ -1,6 +1,5 @@
 import React from 'react'
 import { useDroppable } from '@dnd-kit/react'
-import { CollisionPriority } from '@dnd-kit/abstract'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
@@ -24,9 +23,7 @@ export interface ColumnProps {
 export function Column({ children, id, name, onAddItem }: ColumnProps) {
     const { ref } = useDroppable({
         id,
-        type: 'column',
-        accept: ['item'],
-        collisionPriority: CollisionPriority.Low,
+        data: { type: 'column', accepts: ['item'] },
     })
 
     const [itemName, setItemName] = React.useState('')
