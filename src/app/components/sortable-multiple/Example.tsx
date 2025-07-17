@@ -1,15 +1,25 @@
 'use client'
 
 import React from 'react'
-import { DragDropProvider } from '@dnd-kit/react'
-import { move } from '@dnd-kit/helpers'
-
+import {
+    DndContext,
+    closestCenter,
+    DragOverEvent,
+    DragEndEvent,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core'
+import {
+    SortableContext,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
 import { Column } from './Column'
 import { Item, ItemData } from './Item'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { v4 as uuidv4 } from 'uuid'
-import { SortableContext } from '@dnd-kit/sortable'
 
 const defaultStyles: React.CSSProperties = {
     display: 'inline-flex',
@@ -27,6 +37,7 @@ export function Example({ style = defaultStyles }: ExampleProps) {
         { id: 'B', name: 'Column B' },
         { id: 'C', name: 'Column C' },
     ])
+
     const [items, setItems] = React.useState<Record<string, ItemData[]>>({
         library: [],
         A: [
@@ -42,6 +53,11 @@ export function Example({ style = defaultStyles }: ExampleProps) {
     })
 
     const [columnName, setColumnName] = React.useState('')
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor)
+    )
 
     const addColumn = (name: string) => {
         const id = uuidv4()
@@ -63,12 +79,40 @@ export function Example({ style = defaultStyles }: ExampleProps) {
         setColumnName('')
     }
 
+    const handleDragOver = (event: DragOverEvent) => {
+        const { active, over } = event
+        if (!active || !over) return
+
+        const activeId = active.id
+        const overId = over.id
+
+        const sourceCol = Object.keys(items).find((colId) =>
+            items[colId].some((i) => i.id === activeId)
+        )
+        const targetCol = over?.data?.current?.column || overId
+
+        if (!sourceCol || !targetCol || sourceCol === targetCol) return
+
+        const draggedItem = items[sourceCol].find((i) => i.id === activeId)
+        if (!draggedItem) return
+
+        setItems((prev) => {
+            const sourceItems = prev[sourceCol].filter((i) => i.id !== activeId)
+            const targetItems = [...prev[targetCol], draggedItem]
+            return {
+                ...prev,
+                [sourceCol]: sourceItems,
+                [targetCol]: targetItems,
+            }
+        })
+    }
+
+    const handleDragEnd = (_event: DragEndEvent) => {
+        // já tratamos tudo no onDragOver
+    }
+
     return (
-        <DragDropProvider
-            onDragOver={(event) => {
-                setItems((current) => move(current, event))
-            }}
-        >
+        <>
             <form
                 onSubmit={handleColumnSubmit}
                 style={{ display: 'flex', gap: 4, marginBottom: 20 }}
@@ -81,36 +125,51 @@ export function Example({ style = defaultStyles }: ExampleProps) {
                 />
                 <Button type="submit">Add Column</Button>
             </form>
-            <div style={style}>
-                {columns.map((column) => (
-                    <Column key={column.id} id={column.id} name={column.name}>
-                        <SortableContext items={items[column.id].map((i) => i.id)} id={column.id}>
-                            {items[column.id]?.map((item, index) => (
+
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+            >
+                <div style={style}>
+                    {columns.map((column) => (
+                        <Column key={column.id} id={column.id} name={column.name}>
+                            <SortableContext
+                                items={items[column.id].map((i) => i.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                {items[column.id].map((item, index) => (
+                                    <Item
+                                        key={item.id}
+                                        item={item}
+                                        index={index}
+                                        column={column.id}
+                                    />
+                                ))}
+                            </SortableContext>
+                        </Column>
+                    ))}
+                </div>
+
+                <div style={{ marginTop: 40 }}>
+                    <Column id="library" name="Library" onAddItem={addLibraryItem}>
+                        <SortableContext
+                            items={items['library'].map((i) => i.id)}
+                            strategy={verticalListSortingStrategy}
+                        >
+                            {items['library'].map((item, index) => (
                                 <Item
                                     key={item.id}
                                     item={item}
                                     index={index}
-                                    column={column.id}
+                                    column="library"
                                 />
                             ))}
                         </SortableContext>
                     </Column>
-                ))}
-            </div>
-            <div style={{ marginTop: 40 }}>
-                <Column id="library" name="Library" onAddItem={addLibraryItem}>
-                    <SortableContext items={items['library'].map((i) => i.id)} id="library">
-                        {items['library']?.map((item, index) => (
-                            <Item
-                                key={item.id}
-                                item={item}
-                                index={index}
-                                column="library"
-                            />
-                        ))}
-                    </SortableContext>
-                </Column>
-            </div>
-        </DragDropProvider>
+                </div>
+            </DndContext>
+        </>
     )
 }

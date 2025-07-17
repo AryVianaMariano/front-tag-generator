@@ -1,5 +1,5 @@
 import React from 'react'
-import { useDroppable } from '@dnd-kit/react'
+import { useDroppable } from '@dnd-kit/core'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
@@ -9,7 +9,7 @@ const styles: React.CSSProperties = {
     gap: 10,
     padding: 20,
     minWidth: 200,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 10,
 }
 
@@ -21,10 +21,7 @@ export interface ColumnProps {
 }
 
 export function Column({ children, id, name, onAddItem }: ColumnProps) {
-    const { ref } = useDroppable({
-        id,
-        data: { type: 'column', accepts: ['item'] },
-    })
+    const { setNodeRef } = useDroppable({ id })
 
     const [itemName, setItemName] = React.useState('')
 
@@ -36,7 +33,7 @@ export function Column({ children, id, name, onAddItem }: ColumnProps) {
     }
 
     return (
-        <div style={styles} ref={ref}>
+        <div style={styles} ref={setNodeRef}>
             <h2>{name}</h2>
             {children}
             {onAddItem && (
