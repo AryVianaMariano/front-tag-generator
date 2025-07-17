@@ -1,7 +1,7 @@
 'use client'
 
 import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core'
 import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
@@ -46,9 +46,30 @@ export function ItemManager() {
     const handleDragEnd = ({ active, over }: DragEndEvent) => {
         if (!over) return
         const origin = findContainerOf(String(active.id))
-        const destination = String(over.id)
+        const overContainer = findContainerOf(String(over.id))
+        const destination = overContainer ?? String(over.id)
         if (!origin) return
-        if (origin === destination) return
+
+        if (origin === destination) {
+            if (origin === 'available') {
+                const oldIndex = availableItems.findIndex((i) => i.id === active.id)
+                const newIndex = availableItems.findIndex((i) => i.id === String(over.id))
+                if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+                    setAvailableItems((items) => arrayMove(items, oldIndex, newIndex))
+                }
+            } else {
+                setContainers((prev) =>
+                    prev.map((c) => {
+                        if (c.id !== origin) return c
+                        const oldIndex = c.items.findIndex((i) => i.id === active.id)
+                        const newIndex = c.items.findIndex((i) => i.id === String(over.id))
+                        if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return c
+                        return { ...c, items: arrayMove(c.items, oldIndex, newIndex) }
+                    })
+                )
+            }
+            return
+        }
 
         if (origin === 'available') {
             const item = availableItems.find((i) => i.id === active.id)
