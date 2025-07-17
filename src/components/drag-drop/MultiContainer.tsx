@@ -20,6 +20,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useState, useRef, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { DraggableItem } from './DraggableItem';
@@ -59,7 +60,7 @@ function SortableContainer({
         useSortable({ id });
 
     const style = {
-        transform: CSS.Translate.toString(transform),
+        transform: CSS.Transform.toString(transform),
         transition,
     };
 
@@ -76,12 +77,17 @@ function SortableContainer({
     );
 }
 
+export interface Item {
+    id: string;
+    name: string;
+}
+
 export function MultiContainer() {
     const [containers, setContainers] = useState<Record<string, string[]>>({});
     const [containerOrder, setContainerOrder] = useState<string[]>([]);
     const nextContainerIndex = useRef(1);
     const [newContainerName, setNewContainerName] = useState('');
-    const [items, setItems] = useState<Record<string, string[]>>({});
+    const [items, setItems] = useState<Record<string, Item[]>>({});
     const [itemInputs, setItemInputs] = useState<Record<string, string>>({});
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -144,7 +150,7 @@ export function MultiContainer() {
 
     const findItemContainerOf = (itemId: string): string | null => {
         return (
-            Object.entries(items).find(([, list]) => list.includes(itemId))?.[0] ?? null
+            Object.entries(items).find(([, list]) => list.some((m) => m.id === itemId))?.[0] ?? null
         )
     }
 
@@ -202,15 +208,17 @@ export function MultiContainer() {
                 const activeItems = prev[activeItemContainer];
                 const overItems = prev[overItemContainer];
 
-                const overIndex = overItems.indexOf(String(over.id));
+                const overIndex = overItems.findIndex((i) => i.id === String(over.id));
                 const newIndex = overIndex >= 0 ? overIndex : overItems.length;
+                const activeItem = activeItems.find((i) => i.id === String(active.id));
+                if (!activeItem) return prev;
 
                 return {
                     ...prev,
-                    [activeItemContainer]: activeItems.filter((i) => i !== active.id),
+                    [activeItemContainer]: activeItems.filter((i) => i.id !== String(active.id)),
                     [overItemContainer]: [
                         ...overItems.slice(0, newIndex),
-                        String(active.id),
+                        activeItem,
                         ...overItems.slice(newIndex),
                     ],
                 };
@@ -253,8 +261,8 @@ export function MultiContainer() {
         }
 
         if (over && activeItemContainer === overItemContainer) {
-            const activeIndex = items[activeItemContainer].indexOf(String(active.id));
-            const overIndex = items[overItemContainer!].indexOf(String(over.id));
+            const activeIndex = items[activeItemContainer].findIndex((i) => i.id === String(active.id));
+            const overIndex = items[overItemContainer!].findIndex((i) => i.id === String(over.id));
             if (activeIndex !== overIndex) {
                 setItems((prev) => ({
                     ...prev,
@@ -268,7 +276,12 @@ export function MultiContainer() {
 
     const handleAddContainer = () => {
         const baseName = newContainerName.trim() || `processo${nextContainerIndex.current}`;
-        const newId = baseName;
+        let newId = baseName;
+        let suffix = 1;
+        while (containerOrder.includes(newId)) {
+            newId = `${baseName}-${suffix}`;
+            suffix += 1;
+        }
         nextContainerIndex.current += 1;
         setContainers((prev) => ({
             ...prev,
@@ -303,9 +316,10 @@ export function MultiContainer() {
     const handleAddItem = (containerId: string) => {
         const name = (itemInputs[containerId] || '').trim();
         if (!name) return;
+        const newItem: Item = { id: uuidv4(), name };
         setItems((prev) => ({
             ...prev,
-            [containerId]: [...(prev[containerId] || []), name],
+            [containerId]: [...(prev[containerId] || []), newItem],
         }));
         setItemInputs((prev) => ({ ...prev, [containerId]: '' }));
     };
@@ -313,7 +327,7 @@ export function MultiContainer() {
     const handleDeleteItem = (containerId: string, id: string) => {
         setItems((prev) => ({
             ...prev,
-            [containerId]: (prev[containerId] || []).filter((m) => m !== id),
+            [containerId]: (prev[containerId] || []).filter((m) => m.id !== id),
         }));
     };
 
@@ -348,13 +362,16 @@ export function MultiContainer() {
                                     ))}
                                 </div>
                             </SortableContext>
-                            <SortableContext items={items[containerId] || []} strategy={verticalListSortingStrategy}>
+                            <SortableContext
+                                items={items[containerId]?.map((i) => i.id) || []}
+                                strategy={verticalListSortingStrategy}
+                            >
                                 <div className="space-y-2 mt-2">
                                     {items[containerId]?.map((mini) => (
                                         <DraggableItem
-                                            key={mini}
-                                            id={mini}
-                                            name={mini}
+                                            key={mini.id}
+                                            id={mini.id}
+                                            name={mini.name}
                                             onDelete={(id) => handleDeleteItem(containerId, id)}
                                         />
                                     ))}

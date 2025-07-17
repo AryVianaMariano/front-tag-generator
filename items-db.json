@@ -1,7 +1,10 @@
 {
   "items": {
     "teste": [
-      "teste"
+      {
+        "id": "b20a56bd-8ec7-48cc-861a-48cd06b22962",
+        "name": "teste"
+      }
     ]
   }
 }
