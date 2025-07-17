@@ -3,27 +3,25 @@ import path from 'path'
 
 const DB_PATH = path.join(process.cwd(), 'db.json')
 
-export interface DataShape {
+export interface ContainerData {
     containers: Record<string, string[]>
-    miniContainers: Record<string, string[]>
     containerOrder: string[]
 }
 
-const defaultData: DataShape = {
+const defaultData: ContainerData = {
     containers: {},
-    miniContainers: {},
     containerOrder: []
 }
 
-export async function readData(): Promise<DataShape> {
+export async function readData(): Promise<ContainerData> {
     try {
         const data = await fs.readFile(DB_PATH, 'utf-8')
-        return JSON.parse(data) as DataShape
+        return JSON.parse(data) as ContainerData
     } catch {
         return { ...defaultData }
     }
 }
 
-export async function writeData(data: DataShape) {
+export async function writeData(data: ContainerData) {
     await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2))
 }

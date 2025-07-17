@@ -1,11 +1,8 @@
 {
   "containers": {
-    "teste": [],
-    "processo6": []
+    "teste": []
   },
-  "miniContainers": {},
   "containerOrder": [
-    "teste",
-    "processo6"
+    "teste"
   ]
 }

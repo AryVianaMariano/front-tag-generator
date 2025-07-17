@@ -90,26 +90,49 @@ export function MultiContainer() {
 
     useEffect(() => {
         async function loadData() {
-            const res = await fetch('/api/containers');
-            if (res.ok) {
-                const data = await res.json();
-                setContainers(data.containers || {});
-                setMiniContainers(data.miniContainers || {});
-                setContainerOrder(data.containerOrder || Object.keys(data.containers || {}));
-                nextContainerIndex.current = (data.containerOrder ? data.containerOrder.length : Object.keys(data.containers || {}).length) + 1;
+            const [containersRes, miniRes] = await Promise.all([
+                fetch('/api/containers'),
+                fetch('/api/mini-containers'),
+            ])
+
+            if (containersRes.ok) {
+                const data = await containersRes.json()
+                setContainers(data.containers || {})
+                setContainerOrder(
+                    data.containerOrder || Object.keys(data.containers || {})
+                )
+                nextContainerIndex.current =
+                    (data.containerOrder
+                        ? data.containerOrder.length
+                        : Object.keys(data.containers || {}).length) + 1
+            }
+
+            if (miniRes.ok) {
+                const data = await miniRes.json()
+                setMiniContainers(data.miniContainers || {})
             }
         }
-        loadData();
-    }, []);
+
+        loadData()
+    }, [])
 
     useEffect(() => {
-        const data = { containers, miniContainers, containerOrder };
+        const data = { containers, containerOrder }
         fetch('/api/containers', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
-        });
-    }, [containers, miniContainers, containerOrder]);
+        })
+    }, [containers, containerOrder])
+
+    useEffect(() => {
+        const data = { miniContainers }
+        fetch('/api/mini-containers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        })
+    }, [miniContainers])
 
     const findContainerOf = (itemId: string): string | null => {
         return (
