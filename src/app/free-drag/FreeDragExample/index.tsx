@@ -1,9 +1,8 @@
 'use client'
 import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { useRef, useState } from 'react'
-import { DraggableBox } from '../DraggableBox'
-import { DropZone } from '../DropZone'
-
+import { Droppable } from '../components/Droppable'
+import { Draggable } from '../components/Draggable'
 
 export function FreeDragExample() {
     const sensors = useSensors(useSensor(PointerSensor))
@@ -49,15 +48,29 @@ export function FreeDragExample() {
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div ref={containerRef} className="relative min-h-[300px] border p-4">
                 {!attached && (
-                    <DraggableBox id="draggable" attached={false} position={position} />
+                    <Draggable
+                        id="draggable"
+                        className="bg-emerald-500 text-white px-4 py-2 rounded cursor-move select-none"
+                        initialPosition={position}
+                        style={{ position: 'absolute' }}
+                    >
+                        Arraste-me
+                    </Draggable>
                 )}
                 <div className="mt-4" ref={dropZoneRef}>
-                    <DropZone id="dropzone">
+                    <Droppable id="dropzone" className="min-h-[150px] w-full border rounded-md p-4">
                         {attached && (
-                            <DraggableBox id="draggable" attached={true} position={{ x: 0, y: 0 }} />
+                            <Draggable
+                                id="draggable"
+                                className="bg-emerald-500 text-white px-4 py-2 rounded cursor-move select-none"
+                                initialPosition={{ x: 0, y: 0 }}
+                                style={{ position: 'relative' }}
+                            >
+                                Arraste-me
+                            </Draggable>
                         )}
                         Solte aqui
-                    </DropZone>
+                    </Droppable>
                 </div>
             </div>
         </DndContext>
