@@ -15,14 +15,15 @@ import {
 import { Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { useLibrary } from '@/app/context/libreary-context'
 
 export function AppRightSidebar() {
-    const [items, setItems] = useState<string[]>([])
+    const { items, createItem } = useLibrary()
     const [newItem, setNewItem] = useState('')
 
     const addItem = () => {
         if (!newItem.trim()) return
-        setItems((prev) => [...prev, newItem.trim()])
+        createItem(newItem.trim())
         setNewItem('')
     }
 
@@ -54,15 +55,15 @@ export function AppRightSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                {/* Lista de itens criados */}
+                {/* Lista de itens da library */}
                 <SidebarGroup>
-                    <SidebarGroupLabel>Itens Criados</SidebarGroupLabel>
+                    <SidebarGroupLabel>Library</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {items.map((item, index) => (
-                                <SidebarMenuItem key={index}>
+                            {items.map((item) => (
+                                <SidebarMenuItem key={item.id}>
                                     <SidebarMenuButton asChild>
-                                        <span>{item}</span>
+                                        <span>{item.name}</span>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             ))}

@@ -40,7 +40,6 @@ export function Column({ id, name, width = COLUMN_WIDTH, children, onAddItem }: 
         maxHeight: '100%',
         overflowY: 'auto',
         minHeight: 0,                // Permite redução de tamanho
-        overflow: 'hidden',          // Esconde estouros
     }
 
 

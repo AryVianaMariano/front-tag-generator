@@ -4,6 +4,7 @@ import "./globals.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/Sidebar";
 import { AppRightSidebar } from "./components/AppRightSidebar";
+import { LibraryProvider } from "./context/libreary-context";
 
 
 const geistSans = Geist({
@@ -31,14 +32,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SidebarProvider>
-          <AppSidebar />
-          <AppRightSidebar />
-          <main>
-            <SidebarTrigger />
-            {children}
-          </main>
-        </SidebarProvider>
+        <LibraryProvider>
+          <SidebarProvider>
+            <AppSidebar />
+            <AppRightSidebar />
+            <main>
+              <SidebarTrigger />
+              {children}
+            </main>
+          </SidebarProvider>
+        </LibraryProvider>
       </body>
     </html>
   );

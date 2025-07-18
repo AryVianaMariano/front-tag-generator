@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { v4 as uuidv4 } from 'uuid'
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
+import { useLibrary } from '@/app/context/libreary-context'
 
 const boardStyle: React.CSSProperties = {
     display: 'grid',
@@ -38,6 +39,8 @@ const boardStyle: React.CSSProperties = {
 }
 
 export function Example() {
+    const { items: libraryItems, addItem: addLibraryItem, removeItem: removeLibraryItem, createItem: createLibraryItem } = useLibrary()
+
     const [columns, setColumns] = React.useState([
         { id: 'A', name: 'Column A' },
         { id: 'B', name: 'Column B' },
@@ -45,7 +48,6 @@ export function Example() {
     ])
 
     const [items, setItems] = React.useState<Record<string, ItemData[]>>({
-        library: [],
         A: [
             { id: 'A0', name: 'A0' },
             { id: 'A1', name: 'A1' },
@@ -68,25 +70,42 @@ export function Example() {
         const activeId = active.id
         const overId = over.id
 
-        const sourceCol = Object.keys(items).find((colId) =>
-            items[colId].some((i) => i.id === activeId)
-        )
+        let sourceCol: string | undefined
+        if (libraryItems.some((i) => i.id === activeId)) {
+            sourceCol = 'library'
+        } else {
+            sourceCol = Object.keys(items).find((colId) =>
+                items[colId].some((i) => i.id === activeId)
+            )
+        }
+
         const targetCol = over?.data?.current?.column || overId
 
         if (!sourceCol || !targetCol || sourceCol === targetCol) return
 
-        const draggedItem = items[sourceCol].find((i) => i.id === activeId)
+        const draggedItem =
+            sourceCol === 'library'
+                ? libraryItems.find((i) => i.id === activeId)
+                : items[sourceCol].find((i) => i.id === activeId)
         if (!draggedItem) return
 
-        setItems((prev) => {
-            const sourceItems = prev[sourceCol].filter((i) => i.id !== activeId)
-            const targetItems = [...prev[targetCol], draggedItem]
-            return {
+        if (sourceCol === 'library') {
+            removeLibraryItem(String(activeId))
+        } else {
+            setItems((prev) => ({
                 ...prev,
-                [sourceCol]: sourceItems,
-                [targetCol]: targetItems,
-            }
-        })
+                [sourceCol!]: prev[sourceCol!].filter((i) => i.id !== activeId),
+            }))
+        }
+
+        if (targetCol === 'library') {
+            addLibraryItem(draggedItem)
+        } else {
+            setItems((prev) => ({
+                ...prev,
+                [targetCol]: [...(prev[targetCol] || []), draggedItem],
+            }))
+        }
     }
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -107,13 +126,6 @@ export function Example() {
         const id = uuidv4()
         setColumns((cols) => [...cols, { id, name }])
         setItems((it) => ({ ...it, [id]: [] }))
-    }
-
-    const addLibraryItem = (name: string) => {
-        setItems((current) => ({
-            ...current,
-            library: [...(current['library'] || []), { id: uuidv4(), name }],
-        }))
     }
 
     const handleColumnSubmit = (e: React.FormEvent) => {
@@ -180,12 +192,12 @@ export function Example() {
 
                 <ResizablePanel defaultSize={30} minSize={10}>
                     <div style={{ padding: 16 }}>
-                        <Column id="library" name="Library" onAddItem={addLibraryItem}>
+                        <Column id="library" name="Library" onAddItem={createLibraryItem}>
                             <SortableContext
-                                items={items['library'].map((i) => i.id)}
+                                items={libraryItems.map((i) => i.id)}
                                 strategy={verticalListSortingStrategy}
                             >
-                                {items['library'].map((item, index) => (
+                                {libraryItems.map((item, index) => (
                                     <Item
                                         key={item.id}
                                         item={item}
