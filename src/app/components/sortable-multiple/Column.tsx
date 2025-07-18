@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
+import { useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -21,7 +22,8 @@ export interface ColumnProps {
 }
 
 export function Column({ id, name, width = COLUMN_WIDTH, children, onAddItem }: ColumnProps) {
-    const { setNodeRef, attributes, listeners, transform, transition } = useSortable({ id })
+    const { setNodeRef: setSortableRef, attributes, listeners, transform, transition } = useSortable({ id })
+    const { setNodeRef: setDroppableRef } = useDroppable({ id, data: { column: id } })
 
     const [itemName, setItemName] = React.useState('')
 
@@ -43,8 +45,13 @@ export function Column({ id, name, width = COLUMN_WIDTH, children, onAddItem }: 
     }
 
 
+    const setRef = (node: HTMLElement | null) => {
+        setSortableRef(node)
+        setDroppableRef(node)
+    }
+
     return (
-        <div ref={setNodeRef} style={style}>
+        <div ref={setRef} style={style}>
             {/* Cabeçalho */}
             <div className="flex items-center justify-between shrink-0">
                 <h2 className="font-semibold text-sm">{name}</h2>
