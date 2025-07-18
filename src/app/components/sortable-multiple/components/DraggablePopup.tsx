@@ -9,11 +9,14 @@ interface DraggablePopupProps {
     onClose: () => void
 }
 
+let globalZIndex = 10000
+
 export function DraggablePopup({ children, initialPosition, onClose }: DraggablePopupProps) {
     const popupRef = useRef<HTMLDivElement>(null)
     const [mounted, setMounted] = useState(false)
     const [position, setPosition] = useState(initialPosition)
     const [dragging, setDragging] = useState(false)
+    const [zIndex, setZIndex] = useState(globalZIndex++)
     const dragOffset = useRef({ x: 0, y: 0 })
 
     useEffect(() => {
@@ -42,7 +45,13 @@ export function DraggablePopup({ children, initialPosition, onClose }: Draggable
         }
     }, [dragging])
 
+    const bringToFront = () => {
+        const nextZ = ++globalZIndex
+        setZIndex(nextZ)
+    }
+
     const startDrag = (e: React.MouseEvent) => {
+        bringToFront()
         if (popupRef.current) {
             const rect = popupRef.current.getBoundingClientRect()
             dragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top }
@@ -57,11 +66,12 @@ export function DraggablePopup({ children, initialPosition, onClose }: Draggable
     return createPortal(
         <div
             ref={popupRef}
+            onMouseDown={bringToFront}
             style={{
                 position: 'absolute',
                 top: position.y,
                 left: position.x,
-                zIndex: 9999,
+                zIndex,
                 width: 250,
                 height: 150,
                 background: '#fff',
@@ -88,7 +98,7 @@ export function DraggablePopup({ children, initialPosition, onClose }: Draggable
                     onClick={onClose}
                     style={{
                         float: 'right',
-                        fontSize: 12,
+                        fontSize: 16,
                         border: 'none',
                         background: 'transparent',
                         cursor: 'pointer',

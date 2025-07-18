@@ -1,26 +1,11 @@
+'use client'
+
 import React from 'react'
-import { useDroppable } from '@dnd-kit/core'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-
-const styles: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 10,
-    padding: 20,
-    minWidth: 200,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 10,
-}
-
-export interface ColumnProps {
-    id: string
-    name: string
-    width?: number // <-- adiciona isso
-    children?: React.ReactNode
-    onAddItem?: (name: string) => void
-}
-
+import { GripHorizontal } from 'lucide-react'
 
 export interface ColumnProps {
     id: string
@@ -28,48 +13,69 @@ export interface ColumnProps {
     width?: number
     children?: React.ReactNode
     onAddItem?: (name: string) => void
-    style?: React.CSSProperties
 }
 
-export function Column({ children, id, name, onAddItem, width, style = {} }: ColumnProps) {
-    const { setNodeRef } = useDroppable({ id })
+export function Column({ id, name, width = 240, children, onAddItem }: ColumnProps) {
+    const { setNodeRef, attributes, listeners, transform, transition } = useSortable({ id })
 
     const [itemName, setItemName] = React.useState('')
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!itemName.trim() || !onAddItem) return
-        onAddItem(itemName.trim())
-        setItemName('')
-    }
-
-    const defaultStyles: React.CSSProperties = {
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        width: 300,              // largura fixa em px
+        height: 600,             // altura fixa em px
+        padding: 16,
+        borderRadius: 10,
+        backgroundColor: '#fff',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 10,
-        padding: 20,
-        width: width || 200,
-        minWidth: width || 200,
-        height: 'auto',
-        backgroundColor: '#f8f9fa',
-        borderRadius: 12,
-        boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-        boxSizing: 'border-box',
+        gap: 8,
+        overflow: 'hidden',
     }
 
+
+
     return (
-        <div style={{ ...defaultStyles, ...style }} ref={setNodeRef}>
-            <h2 className="font-semibold text-gray-700 mb-2">{name}</h2>
-            {children}
+        <div ref={setNodeRef} style={style}>
+            {/* Cabeçalho */}
+            <div className="flex items-center justify-between mb-2 shrink-0">
+                <h2 className="font-semibold text-sm">{name}</h2>
+                <button
+                    {...attributes}
+                    {...listeners}
+                    className="cursor-grab text-muted-foreground"
+                    tabIndex={-1}
+                >
+                    <GripHorizontal className="w-4 h-4" />
+                </button>
+            </div>
+
+            {/* Conteúdo expansível */}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+                {children}
+            </div>
+
+
+            {/* Formulário de adicionar item */}
             {onAddItem && (
-                <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 4 }}>
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault()
+                        if (!itemName.trim()) return
+                        onAddItem(itemName.trim())
+                        setItemName('')
+                    }}
+                    className="flex gap-2 pt-2 shrink-0"
+                >
                     <Input
                         value={itemName}
                         onChange={(e) => setItemName(e.target.value)}
-                        placeholder="New item"
-                        style={{ flex: 1 }}
+                        placeholder="Novo item"
+                        className="flex-1"
                     />
-                    <Button type="submit">Add</Button>
+                    <Button type="submit">+</Button>
                 </form>
             )}
         </div>

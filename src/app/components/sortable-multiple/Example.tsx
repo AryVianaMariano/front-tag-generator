@@ -4,15 +4,16 @@ import React from 'react'
 import {
     DndContext,
     closestCenter,
-    DragOverEvent,
-    DragEndEvent,
-    KeyboardSensor,
-    PointerSensor,
     useSensor,
     useSensors,
+    PointerSensor,
+    KeyboardSensor,
+    DragEndEvent,
+    DragOverEvent,
 } from '@dnd-kit/core'
 import {
     SortableContext,
+    horizontalListSortingStrategy,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { Column } from './Column'
@@ -21,27 +22,26 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { v4 as uuidv4 } from 'uuid'
 
-const defaultStyles: React.CSSProperties = {
+const COLUMN_WIDTH = 240 // largura padrão das colunas
+
+const boardStyle: React.CSSProperties = {
     display: 'flex',
-    alignItems: 'flex-start', // <-- importante para altura independente
+    alignItems: 'stretch',
     gap: 20,
+    padding: 20,
+    height: '80vh',
+    backgroundColor: '#f0f2f5',
+    borderRadius: 8,
+    border: '1px solid #ccc',
     overflowX: 'auto',
 }
 
 
-export interface ExampleProps {
-    style?: React.CSSProperties
-}
-
-export function Example({ style = defaultStyles }: ExampleProps) {
-    const [columns, setColumns] = React.useState<{
-        id: string
-        name: string
-        width?: number
-    }[]>([
-        { id: 'A', name: 'Column A', width: 220 },
-        { id: 'B', name: 'Column B', width: 250 },
-        { id: 'C', name: 'Column C', width: 180 },
+export function Example() {
+    const [columns, setColumns] = React.useState([
+        { id: 'A', name: 'Column A' },
+        { id: 'B', name: 'Column B' },
+        { id: 'C', name: 'Column C' },
     ])
 
     const [items, setItems] = React.useState<Record<string, ItemData[]>>({
@@ -49,12 +49,8 @@ export function Example({ style = defaultStyles }: ExampleProps) {
         A: [
             { id: 'A0', name: 'A0' },
             { id: 'A1', name: 'A1' },
-            { id: 'A2', name: 'A2' },
         ],
-        B: [
-            { id: 'B0', name: 'B0' },
-            { id: 'B1', name: 'B1' },
-        ],
+        B: [{ id: 'B0', name: 'B0' }],
         C: [],
     })
 
@@ -64,26 +60,6 @@ export function Example({ style = defaultStyles }: ExampleProps) {
         useSensor(PointerSensor),
         useSensor(KeyboardSensor)
     )
-
-    const addColumn = (name: string) => {
-        const id = uuidv4()
-        setColumns((cols) => [...cols, { id, name, width: 200 }])
-        setItems((it) => ({ ...it, [id]: [] }))
-    }
-
-    const addLibraryItem = (name: string) => {
-        setItems((current) => ({
-            ...current,
-            library: [...(current['library'] || []), { id: uuidv4(), name }],
-        }))
-    }
-
-    const handleColumnSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!columnName.trim()) return
-        addColumn(columnName.trim())
-        setColumnName('')
-    }
 
     const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event
@@ -113,8 +89,38 @@ export function Example({ style = defaultStyles }: ExampleProps) {
         })
     }
 
-    const handleDragEnd = (_event: DragEndEvent) => {
-        // já tratamos tudo no onDragOver
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event
+        if (!over || active.id === over.id) return
+
+        const oldIndex = columns.findIndex((c) => c.id === active.id)
+        const newIndex = columns.findIndex((c) => c.id === over.id)
+        if (oldIndex !== -1 && newIndex !== -1) {
+            const newColumns = [...columns]
+            const [moved] = newColumns.splice(oldIndex, 1)
+            newColumns.splice(newIndex, 0, moved)
+            setColumns(newColumns)
+        }
+    }
+
+    const addColumn = (name: string) => {
+        const id = uuidv4()
+        setColumns((cols) => [...cols, { id, name }])
+        setItems((it) => ({ ...it, [id]: [] }))
+    }
+
+    const addLibraryItem = (name: string) => {
+        setItems((current) => ({
+            ...current,
+            library: [...(current['library'] || []), { id: uuidv4(), name }],
+        }))
+    }
+
+    const handleColumnSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!columnName.trim()) return
+        addColumn(columnName.trim())
+        setColumnName('')
     }
 
     return (
@@ -138,31 +144,35 @@ export function Example({ style = defaultStyles }: ExampleProps) {
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
             >
-                <div style={style}>
-                    {columns.map((column) => (
-                        <Column
-                            key={column.id}
-                            id={column.id}
-                            name={column.name}
-                            width={column.width} // <-- passa a largura aqui
-                        >
-                            <SortableContext
-                                items={items[column.id].map((i) => i.id)}
-                                strategy={verticalListSortingStrategy}
+                <SortableContext
+                    items={columns.map((col) => col.id)}
+                    strategy={horizontalListSortingStrategy}
+                >
+                    <div style={boardStyle}>
+                        {columns.map((column) => (
+                            <Column
+                                key={column.id}
+                                id={column.id}
+                                name={column.name}
                             >
-                                {items[column.id].map((item, index) => (
-                                    <Item
-                                        key={item.id}
-                                        item={item}
-                                        index={index}
-                                        column={column.id}
-                                    />
-                                ))}
-                            </SortableContext>
-                        </Column>
-                    ))}
+                                <SortableContext
+                                    items={items[column.id]?.map((i) => i.id) || []}
+                                    strategy={verticalListSortingStrategy}
+                                >
+                                    {items[column.id]?.map((item, index) => (
+                                        <Item
+                                            key={item.id}
+                                            item={item}
+                                            index={index}
+                                            column={column.id}
+                                        />
+                                    ))}
+                                </SortableContext>
+                            </Column>
+                        ))}
 
-                </div>
+                    </div>
+                </SortableContext>
 
                 <div style={{ marginTop: 40 }}>
                     <Column id="library" name="Library" onAddItem={addLibraryItem}>
