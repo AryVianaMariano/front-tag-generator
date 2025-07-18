@@ -16,14 +16,15 @@ import {
     verticalListSortingStrategy,
     rectSortingStrategy,
 } from '@dnd-kit/sortable'
-import { Column } from './Column'
+import { Column, COLUMN_WIDTH } from './Column'
 import { Item, ItemData } from './Item'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { v4 as uuidv4 } from 'uuid'
 
 const boardStyle: React.CSSProperties = {
-    display: 'flex',
+    display: 'grid',
+    gridTemplateColumns: `repeat(5, ${COLUMN_WIDTH}px)`,
     alignItems: 'stretch',
     gap: 20,
     padding: 20,
@@ -34,6 +35,7 @@ const boardStyle: React.CSSProperties = {
     overflowY: 'auto',
     maxHeight: '70vh',
 }
+
 
 
 export function Example() {
@@ -123,6 +125,7 @@ export function Example() {
     }
 
     return (
+
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
             <form
                 onSubmit={handleColumnSubmit}

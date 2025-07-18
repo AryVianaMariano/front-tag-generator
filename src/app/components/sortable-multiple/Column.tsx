@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { GripHorizontal } from 'lucide-react'
 
+export const COLUMN_WIDTH = 240
+
 export interface ColumnProps {
     id: string
     name: string
@@ -15,7 +17,7 @@ export interface ColumnProps {
     onAddItem?: (name: string) => void
 }
 
-export function Column({ id, name, width = 240, children, onAddItem }: ColumnProps) {
+export function Column({ id, name, width = COLUMN_WIDTH, children, onAddItem }: ColumnProps) {
     const { setNodeRef, attributes, listeners, transform, transition } = useSortable({ id })
 
     const [itemName, setItemName] = React.useState('')
@@ -33,7 +35,6 @@ export function Column({ id, name, width = 240, children, onAddItem }: ColumnPro
         gap: 8,
         maxHeight: '70vh',
     }
-
 
 
     return (
