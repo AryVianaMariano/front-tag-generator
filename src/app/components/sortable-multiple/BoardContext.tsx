@@ -59,8 +59,12 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     const [poolItems, setPoolItems] = useState<ItemData[]>([])
     const [activeItem, setActiveItem] = useState<ItemData | null>(null)
 
-    const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor))
-
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 8 },
+        }),
+        useSensor(KeyboardSensor),
+    )
     const addColumn = (name: string) => {
         const id = uuidv4()
         setColumns((cols) => [...cols, { id, name }])
