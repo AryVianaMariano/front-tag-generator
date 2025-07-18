@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 interface DraggablePopupProps {
@@ -24,39 +24,48 @@ export function DraggablePopup({ children, initialPosition, onClose }: Draggable
     }, [])
 
     useEffect(() => {
-        function handleMouseMove(e: MouseEvent) {
-            if (dragging) {
-                setPosition({ x: e.clientX - dragOffset.current.x, y: e.clientY - dragOffset.current.y })
-            }
+        function handleMove(e: MouseEvent | TouchEvent) {
+            if (!dragging) return
+            const point = 'touches' in e ? e.touches[0] : e
+            setPosition({
+                x: point.clientX - dragOffset.current.x,
+                y: point.clientY - dragOffset.current.y,
+            })
         }
 
-        function handleMouseUp() {
+        function handleUp() {
             setDragging(false)
         }
 
         if (dragging) {
-            window.addEventListener('mousemove', handleMouseMove)
-            window.addEventListener('mouseup', handleMouseUp)
+            window.addEventListener('mousemove', handleMove)
+            window.addEventListener('touchmove', handleMove)
+            window.addEventListener('mouseup', handleUp)
+            window.addEventListener('touchend', handleUp)
         }
 
         return () => {
-            window.removeEventListener('mousemove', handleMouseMove)
-            window.removeEventListener('mouseup', handleMouseUp)
+            window.removeEventListener('mousemove', handleMove)
+            window.removeEventListener('touchmove', handleMove)
+            window.removeEventListener('mouseup', handleUp)
+            window.removeEventListener('touchend', handleUp)
         }
     }, [dragging])
 
-    const bringToFront = () => {
+    const bringToFront = useCallback(() => {
         const nextZ = ++globalZIndex
         setZIndex(nextZ)
-    }
+    }, [])
 
-    const startDrag = (e: React.MouseEvent) => {
+    const startDrag = (e: React.MouseEvent | React.TouchEvent) => {
         bringToFront()
+        const point = 'touches' in e ? e.touches[0] : e
         if (popupRef.current) {
             const rect = popupRef.current.getBoundingClientRect()
-            dragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+            dragOffset.current = { x: point.clientX - rect.left, y: point.clientY - rect.top }
             setDragging(true)
         }
+        e.preventDefault()
     }
 
     if (!mounted || typeof document === 'undefined') {
@@ -67,6 +76,7 @@ export function DraggablePopup({ children, initialPosition, onClose }: Draggable
         <div
             ref={popupRef}
             onMouseDown={bringToFront}
+            onTouchStart={bringToFront}
             style={{
                 position: 'absolute',
                 top: position.y,
@@ -92,6 +102,7 @@ export function DraggablePopup({ children, initialPosition, onClose }: Draggable
                     userSelect: 'none',
                 }}
                 onMouseDown={startDrag}
+                onTouchStart={startDrag}
             >
                 <span className="text-sm font-semibold">Arraste aqui</span>
                 <button
