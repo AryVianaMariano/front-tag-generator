@@ -21,11 +21,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { useDroppable } from "@dnd-kit/core"
 import { PoolItem, useBoard } from "../sortable-multiple"
 
 export function AppRightSidebar() {
     const { poolItems, addPoolItem } = useBoard()
     const [itemName, setItemName] = React.useState('')
+    const { setNodeRef } = useDroppable({ id: 'POOL', data: { container: 'pool' } })
 
     const handleItemSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -50,7 +52,7 @@ export function AppRightSidebar() {
                     </TabsList>
 
                     {/* Conteúdo ao lado da sidebar */}
-                    <div className="flex-1 p-6 overflow-auto">
+                    <div className="flex-1 p-4 overflow-auto">
                         <TabsContent value="account">
                             <Card>
                                 <CardHeader>
@@ -59,15 +61,15 @@ export function AppRightSidebar() {
                                         Crie itens e arraste para as colunas
                                     </CardDescription>
                                 </CardHeader>
-                                <CardContent className="grid gap-4">
-                                    <form onSubmit={handleItemSubmit} className="flex gap-2">
+                                <CardContent ref={setNodeRef} className="grid gap-4">
+                                    <form onSubmit={handleItemSubmit} className="flex-col ">
                                         <Input
                                             value={itemName}
                                             onChange={(e) => setItemName(e.target.value)}
                                             placeholder="Novo item"
                                             className="flex-1"
                                         />
-                                        <Button type="submit">Adicionar</Button>
+                                        <Button className='mt-1 w-full' type="submit">Adicionar</Button>
                                     </form>
                                     <SortableContext
                                         items={poolItems.map((i) => i.id)}

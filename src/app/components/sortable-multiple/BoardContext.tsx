@@ -96,8 +96,9 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
         const sourceColumn = active.data.current?.column as string | undefined
 
         const targetColumn = (over.data.current?.column as string) || String(over.id)
+        const isTargetPool = targetColumn === 'POOL'
 
-        if (activeType === 'poolItem' && targetColumn) {
+        if (activeType === 'poolItem' && targetColumn && !isTargetPool) {
             const dragged = poolItems.find((i) => i.id === activeId)
             if (!dragged) return
 
@@ -106,6 +107,23 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
                 ...prev,
                 [targetColumn]: [...(prev[targetColumn] || []), dragged],
             }))
+            return
+        }
+
+        if (
+            activeType === 'item' &&
+            sourceColumn &&
+            isTargetPool
+        ) {
+            const dragged = items[sourceColumn].find((i) => i.id === activeId)
+            if (!dragged) return
+
+            setItems((prev) => ({
+                ...prev,
+                [sourceColumn]: prev[sourceColumn].filter((i) => i.id !== activeId),
+            }))
+
+            setPoolItems((prev) => [...prev, dragged])
             return
         }
 
