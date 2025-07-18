@@ -9,7 +9,9 @@ import {
     PointerSensor,
     KeyboardSensor,
     DragOverEvent,
+    DragStartEvent,
     DragEndEvent,
+    DragOverlay,
 } from '@dnd-kit/core'
 import { ItemData } from './Item'
 import { v4 as uuidv4 } from 'uuid'
@@ -54,6 +56,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     })
 
     const [poolItems, setPoolItems] = useState<ItemData[]>([])
+    const [activeItem, setActiveItem] = useState<ItemData | null>(null)
 
     const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor))
 
@@ -66,6 +69,22 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     const addPoolItem = (name: string) => {
         const item: ItemData = { id: uuidv4(), name }
         setPoolItems((prev) => [...prev, item])
+    }
+
+    const handleDragStart = (event: DragStartEvent) => {
+        const { active } = event
+        const activeId = String(active.id)
+        const activeType = active.data.current?.type
+        if (activeType === 'poolItem') {
+            const item = poolItems.find((i) => i.id === activeId)
+            setActiveItem(item || null)
+        } else if (activeType === 'item') {
+            const sourceColumn = active.data.current?.column as string | undefined
+            const item = sourceColumn ? items[sourceColumn]?.find((i) => i.id === activeId) : null
+            setActiveItem(item || null)
+        } else {
+            setActiveItem(null)
+        }
     }
 
     const handleDragOver = (event: DragOverEvent) => {
@@ -123,6 +142,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
             newColumns.splice(newIndex, 0, moved)
             setColumns(newColumns)
         }
+        setActiveItem(null)
     }
 
     return (
@@ -130,10 +150,27 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
             >
                 {children}
+                <DragOverlay>
+                    {activeItem ? (
+                        <div
+                            style={{
+                                padding: '10px 12px',
+                                background: '#ffffff',
+                                border: '1px solid #ddd',
+                                borderRadius: '8px',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                            }}
+                            className="text-sm"
+                        >
+                            {activeItem.name}
+                        </div>
+                    ) : null}
+                </DragOverlay>
             </DndContext>
         </BoardContext.Provider>
     )
