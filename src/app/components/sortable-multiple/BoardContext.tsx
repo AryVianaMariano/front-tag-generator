@@ -14,6 +14,7 @@ import {
     DragOverlay,
 } from '@dnd-kit/core'
 import { ItemData } from './Item'
+import { arrayMove } from '@dnd-kit/sortable'
 import { v4 as uuidv4 } from 'uuid'
 
 interface ColumnData {
@@ -150,16 +151,68 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event
-        if (!over || active.id === over.id) return
-
-        const oldIndex = columns.findIndex((c) => c.id === active.id)
-        const newIndex = columns.findIndex((c) => c.id === over.id)
-        if (oldIndex !== -1 && newIndex !== -1) {
-            const newColumns = [...columns]
-            const [moved] = newColumns.splice(oldIndex, 1)
-            newColumns.splice(newIndex, 0, moved)
-            setColumns(newColumns)
+        if (!active || !over) {
+            setActiveItem(null)
+            return
         }
+
+        const activeId = String(active.id)
+        const overId = String(over.id)
+        const activeType = active.data.current?.type
+        const sourceColumn = active.data.current?.column as string | undefined
+        const targetColumn = (over.data.current?.column as string) || overId
+        const overType = over.data.current?.type
+
+        // Reorder columns
+        if (!activeType) {
+            const oldIndex = columns.findIndex((c) => c.id === activeId)
+            const newIndex = columns.findIndex((c) => c.id === overId)
+            if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+                setColumns((cols) => arrayMove(cols, oldIndex, newIndex))
+            }
+            setActiveItem(null)
+            return
+        }
+
+        // Reorder items or move between columns
+        if (activeType === 'item' && sourceColumn) {
+            setItems((prev) => {
+                const sourceItems = Array.from(prev[sourceColumn])
+                const activeIndex = sourceItems.findIndex((i) => i.id === activeId)
+                if (activeIndex === -1) return prev
+
+                const newState = { ...prev }
+
+                if (sourceColumn === targetColumn) {
+                    const overIndex = sourceItems.findIndex((i) => i.id === overId)
+                    if (overIndex !== -1 && activeIndex !== overIndex) {
+                        newState[sourceColumn] = arrayMove(sourceItems, activeIndex, overIndex)
+                    }
+                } else {
+                    const targetItems = Array.from(prev[targetColumn] || [])
+                    const overIndex =
+                        overType === 'item'
+                            ? targetItems.findIndex((i) => i.id === overId)
+                            : targetItems.length
+                    const [moved] = sourceItems.splice(activeIndex, 1)
+                    targetItems.splice(overIndex, 0, moved)
+                    newState[sourceColumn] = sourceItems
+                    newState[targetColumn] = targetItems
+                }
+
+                return newState
+            })
+        }
+
+        // Reorder items in the pool
+        if (activeType === 'poolItem' && targetColumn === 'POOL') {
+            const oldIndex = poolItems.findIndex((i) => i.id === activeId)
+            const newIndex = poolItems.findIndex((i) => i.id === overId)
+            if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+                setPoolItems((items) => arrayMove(items, oldIndex, newIndex))
+            }
+        }
+
         setActiveItem(null)
     }
 
