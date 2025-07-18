@@ -68,9 +68,8 @@ export function Example() {
         const activeId = active.id
         const overId = over.id
 
-        let sourceCol: string | undefined
+        const sourceCol = Object.keys(items).find((colId) =>
 
-        sourceCol = Object.keys(items).find((colId) =>
             items[colId].some((i) => i.id === activeId)
         )
 
@@ -177,7 +176,6 @@ export function Example() {
                             </div>
                         </SortableContext>
 
-                        <AppRightSidebar />
                     </DndContext>
                 </div>
             </div>
