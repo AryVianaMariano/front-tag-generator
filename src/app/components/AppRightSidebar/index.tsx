@@ -1,3 +1,6 @@
+'use client'
+
+import React from 'react'
 import { KeyIcon, UserIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,8 +20,20 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { PoolItem, useBoard } from "../sortable-multiple"
 
 export function AppRightSidebar() {
+    const { poolItems, addPoolItem } = useBoard()
+    const [itemName, setItemName] = React.useState('')
+
+    const handleItemSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!itemName.trim()) return
+        addPoolItem(itemName.trim())
+        setItemName('')
+    }
+
     return (
         <Sidebar side="right">
             <SidebarContent className="h-svh">
@@ -39,24 +54,30 @@ export function AppRightSidebar() {
                         <TabsContent value="account">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Account</CardTitle>
+                                    <CardTitle>Itens</CardTitle>
                                     <CardDescription>
-                                        Make changes to your account here.
+                                        Crie itens e arraste para as colunas
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="grid gap-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="name">Name</Label>
-                                        <Input id="name" defaultValue="Pedro Duarte" />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="username">Username</Label>
-                                        <Input id="username" defaultValue="@peduarte" />
-                                    </div>
+                                    <form onSubmit={handleItemSubmit} className="flex gap-2">
+                                        <Input
+                                            value={itemName}
+                                            onChange={(e) => setItemName(e.target.value)}
+                                            placeholder="Novo item"
+                                            className="flex-1"
+                                        />
+                                        <Button type="submit">Adicionar</Button>
+                                    </form>
+                                    <SortableContext
+                                        items={poolItems.map((i) => i.id)}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        {poolItems.map((item) => (
+                                            <PoolItem key={item.id} item={item} />
+                                        ))}
+                                    </SortableContext>
                                 </CardContent>
-                                <CardFooter>
-                                    <Button>Save changes</Button>
-                                </CardFooter>
                             </Card>
                         </TabsContent>
 

@@ -1,3 +1,5 @@
 export * from './Column'
 export * from './Item'
 export * from './Example'
+export * from './BoardContext'
+export * from './PoolItem'
