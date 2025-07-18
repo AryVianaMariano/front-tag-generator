@@ -20,17 +20,17 @@ import { Sidebar, SidebarContent } from "@/components/ui/sidebar"
 
 export function AppRightSidebar() {
     return (
-        <Sidebar side="right" collapsible="none">
-            <SidebarContent>
+        <Sidebar side="right">
+            <SidebarContent className="h-svh">
                 <Tabs defaultValue="account" className="flex h-full">
-                    <TabsList className="flex flex-col space-y-2 bg-muted p-4 min-w-[180px] rounded-none border-l">
+                    <TabsList className="flex flex-row bg-muted min-w-[180px] rounded-none border-l mx-auto w-full">
                         <TabsTrigger value="account" className="justify-start">
                             <UserIcon className="mr-2 h-4 w-4" />
-                            Account
+                            Criação
                         </TabsTrigger>
                         <TabsTrigger value="password" className="justify-start">
                             <KeyIcon className="mr-2 h-4 w-4" />
-                            Password
+                            Biblioteca
                         </TabsTrigger>
                     </TabsList>
 

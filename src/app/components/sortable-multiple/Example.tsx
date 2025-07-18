@@ -21,7 +21,6 @@ import { Item, ItemData } from './Item'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { v4 as uuidv4 } from 'uuid'
-import { AppRightSidebar } from '../AppRightSidebar'
 
 const boardStyle: React.CSSProperties = {
     display: 'grid',

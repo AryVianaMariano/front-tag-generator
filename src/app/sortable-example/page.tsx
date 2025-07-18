@@ -6,12 +6,12 @@ import { AppRightSidebar } from '../components/AppRightSidebar'
 
 export default function SortableExamplePage() {
     return (
-        <main className="flex relative min-h-screen flex-col items-center justify-start p-24 gap-8">
-            <h1 className="text-4xl font-bold">Sortable Multiple List</h1>
-
-            <Example />
+        <main className="relative flex min-h-screen gap-8 p-24">
+            <div className="flex flex-1 flex-col items-center gap-8">
+                <h1 className="text-4xl font-bold">Sortable Multiple List</h1>
+                <Example />
+            </div>
             <AppRightSidebar />
-
         </main>
     )
 }
