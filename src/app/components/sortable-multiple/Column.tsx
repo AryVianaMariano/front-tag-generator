@@ -16,11 +16,13 @@ const styles: React.CSSProperties = {
 export interface ColumnProps {
     id: string
     name: string
+    width?: number // <-- adiciona isso
     children?: React.ReactNode
     onAddItem?: (name: string) => void
 }
 
-export function Column({ children, id, name, onAddItem }: ColumnProps) {
+
+export function Column({ children, id, name, onAddItem, width }: ColumnProps) {
     const { setNodeRef } = useDroppable({ id })
 
     const [itemName, setItemName] = React.useState('')
@@ -31,6 +33,20 @@ export function Column({ children, id, name, onAddItem }: ColumnProps) {
         onAddItem(itemName.trim())
         setItemName('')
     }
+
+    const styles: React.CSSProperties = {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        padding: 20,
+        minWidth: width || 200,
+        width: width,
+        height: 'auto', // <-- garante altura independente
+        backgroundColor: 'rgba(0,0,0,0.05)',
+        borderRadius: 10,
+        boxSizing: 'border-box',
+    }
+
 
     return (
         <div style={styles} ref={setNodeRef}>

@@ -22,20 +22,26 @@ import { Button } from '@/components/ui/button'
 import { v4 as uuidv4 } from 'uuid'
 
 const defaultStyles: React.CSSProperties = {
-    display: 'inline-flex',
-    flexDirection: 'row',
+    display: 'flex',
+    alignItems: 'flex-start', // <-- importante para altura independente
     gap: 20,
+    overflowX: 'auto',
 }
+
 
 export interface ExampleProps {
     style?: React.CSSProperties
 }
 
 export function Example({ style = defaultStyles }: ExampleProps) {
-    const [columns, setColumns] = React.useState<{ id: string; name: string }[]>([
-        { id: 'A', name: 'Column A' },
-        { id: 'B', name: 'Column B' },
-        { id: 'C', name: 'Column C' },
+    const [columns, setColumns] = React.useState<{
+        id: string
+        name: string
+        width?: number
+    }[]>([
+        { id: 'A', name: 'Column A', width: 220 },
+        { id: 'B', name: 'Column B', width: 250 },
+        { id: 'C', name: 'Column C', width: 180 },
     ])
 
     const [items, setItems] = React.useState<Record<string, ItemData[]>>({
@@ -61,7 +67,7 @@ export function Example({ style = defaultStyles }: ExampleProps) {
 
     const addColumn = (name: string) => {
         const id = uuidv4()
-        setColumns((cols) => [...cols, { id, name }])
+        setColumns((cols) => [...cols, { id, name, width: 200 }])
         setItems((it) => ({ ...it, [id]: [] }))
     }
 
@@ -134,7 +140,12 @@ export function Example({ style = defaultStyles }: ExampleProps) {
             >
                 <div style={style}>
                     {columns.map((column) => (
-                        <Column key={column.id} id={column.id} name={column.name}>
+                        <Column
+                            key={column.id}
+                            id={column.id}
+                            name={column.name}
+                            width={column.width} // <-- passa a largura aqui
+                        >
                             <SortableContext
                                 items={items[column.id].map((i) => i.id)}
                                 strategy={verticalListSortingStrategy}
@@ -150,6 +161,7 @@ export function Example({ style = defaultStyles }: ExampleProps) {
                             </SortableContext>
                         </Column>
                     ))}
+
                 </div>
 
                 <div style={{ marginTop: 40 }}>
