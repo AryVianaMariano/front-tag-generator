@@ -1,77 +1,89 @@
-'use client'
-
-import { useState } from 'react'
+import { AppWindowIcon, KeyIcon, UserIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
-    Sidebar,
-    SidebarContent,
-    SidebarGroup,
-    SidebarGroupLabel,
-    SidebarGroupContent,
-    SidebarMenu,
-    SidebarMenuItem,
-    SidebarMenuButton,
-} from "@/components/ui/sidebar"
-
-import { Plus } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { useLibrary } from '@/app/context/libreary-context'
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@/components/ui/tabs"
+import {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardDescription,
+    CardContent,
+    CardFooter,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export function AppRightSidebar() {
-    const { items, createItem } = useLibrary()
-    const [newItem, setNewItem] = useState('')
-
-    const addItem = () => {
-        if (!newItem.trim()) return
-        createItem(newItem.trim())
-        setNewItem('')
-    }
-
     return (
-        <Sidebar side="right" variant="sidebar" collapsible="icon">
-            <SidebarContent>
+        <div className="flex h-screen">
+            {/* Sidebar vertical */}
+            <Tabs defaultValue="account" className="flex">
+                <TabsList className="flex flex-col space-y-2 bg-muted p-4 min-w-[180px] rounded-none border-r">
+                    <TabsTrigger value="account" className="justify-start">
+                        <UserIcon className="mr-2 h-4 w-4" />
+                        Account
+                    </TabsTrigger>
+                    <TabsTrigger value="password" className="justify-start">
+                        <KeyIcon className="mr-2 h-4 w-4" />
+                        Password
+                    </TabsTrigger>
+                </TabsList>
 
-                {/* Formulário no topo */}
-                <SidebarGroup>
-                    <SidebarGroupLabel>Adicionar Item</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <form
-                            onSubmit={(e) => {
-                                e.preventDefault()
-                                addItem()
-                            }}
-                            className="flex flex-col gap-2"
-                        >
-                            <Input
-                                placeholder="Novo item"
-                                value={newItem}
-                                onChange={(e) => setNewItem(e.target.value)}
-                            />
-                            <Button type="submit" className="w-full">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Criar
-                            </Button>
-                        </form>
-                    </SidebarGroupContent>
-                </SidebarGroup>
+                {/* Conteúdo ao lado da sidebar */}
+                <div className="flex-1 p-6 overflow-auto">
+                    <TabsContent value="account">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Account</CardTitle>
+                                <CardDescription>
+                                    Make changes to your account here.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="grid gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="name">Name</Label>
+                                    <Input id="name" defaultValue="Pedro Duarte" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="username">Username</Label>
+                                    <Input id="username" defaultValue="@peduarte" />
+                                </div>
+                            </CardContent>
+                            <CardFooter>
+                                <Button>Save changes</Button>
+                            </CardFooter>
+                        </Card>
+                    </TabsContent>
 
-                {/* Lista de itens da library */}
-                <SidebarGroup>
-                    <SidebarGroupLabel>Library</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {items.map((item) => (
-                                <SidebarMenuItem key={item.id}>
-                                    <SidebarMenuButton asChild>
-                                        <span>{item.name}</span>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
-
-            </SidebarContent>
-        </Sidebar>
+                    <TabsContent value="password">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Password</CardTitle>
+                                <CardDescription>
+                                    Change your password here.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="grid gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="current">Current password</Label>
+                                    <Input id="current" type="password" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="new">New password</Label>
+                                    <Input id="new" type="password" />
+                                </div>
+                            </CardContent>
+                            <CardFooter>
+                                <Button>Update password</Button>
+                            </CardFooter>
+                        </Card>
+                    </TabsContent>
+                </div>
+            </Tabs>
+        </div>
     )
 }

@@ -21,8 +21,7 @@ import { Item, ItemData } from './Item'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { v4 as uuidv4 } from 'uuid'
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
-import { useLibrary } from '@/app/context/libreary-context'
+import { AppRightSidebar } from '../AppRightSidebar'
 
 const boardStyle: React.CSSProperties = {
     display: 'grid',
@@ -39,7 +38,6 @@ const boardStyle: React.CSSProperties = {
 }
 
 export function Example() {
-    const { items: libraryItems, addItem: addLibraryItem, removeItem: removeLibraryItem, createItem: createLibraryItem } = useLibrary()
 
     const [columns, setColumns] = React.useState([
         { id: 'A', name: 'Column A' },
@@ -71,41 +69,34 @@ export function Example() {
         const overId = over.id
 
         let sourceCol: string | undefined
-        if (libraryItems.some((i) => i.id === activeId)) {
-            sourceCol = 'library'
-        } else {
-            sourceCol = Object.keys(items).find((colId) =>
-                items[colId].some((i) => i.id === activeId)
-            )
-        }
+
+        sourceCol = Object.keys(items).find((colId) =>
+            items[colId].some((i) => i.id === activeId)
+        )
+
 
         const targetCol = over?.data?.current?.column || overId
 
         if (!sourceCol || !targetCol || sourceCol === targetCol) return
 
         const draggedItem =
-            sourceCol === 'library'
-                ? libraryItems.find((i) => i.id === activeId)
-                : items[sourceCol].find((i) => i.id === activeId)
+
+            items[sourceCol].find((i) => i.id === activeId)
         if (!draggedItem) return
 
-        if (sourceCol === 'library') {
-            removeLibraryItem(String(activeId))
-        } else {
-            setItems((prev) => ({
-                ...prev,
-                [sourceCol!]: prev[sourceCol!].filter((i) => i.id !== activeId),
-            }))
-        }
 
-        if (targetCol === 'library') {
-            addLibraryItem(draggedItem)
-        } else {
-            setItems((prev) => ({
-                ...prev,
-                [targetCol]: [...(prev[targetCol] || []), draggedItem],
-            }))
-        }
+        setItems((prev) => ({
+            ...prev,
+            [sourceCol!]: prev[sourceCol!].filter((i) => i.id !== activeId),
+        }))
+
+
+
+        setItems((prev) => ({
+            ...prev,
+            [targetCol]: [...(prev[targetCol] || []), draggedItem],
+        }))
+
     }
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -136,22 +127,22 @@ export function Example() {
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-            <form
-                onSubmit={handleColumnSubmit}
-                style={{ display: 'flex', gap: 4, padding: 16 }}
-            >
-                <Input
-                    value={columnName}
-                    onChange={(e) => setColumnName(e.target.value)}
-                    placeholder="New column name"
-                    style={{ flex: 1 }}
-                />
-                <Button type="submit">Add Column</Button>
-            </form>
+        <div style={{ display: 'flex', height: '100vh' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                <form
+                    onSubmit={handleColumnSubmit}
+                    style={{ display: 'flex', gap: 4, padding: 16 }}
+                >
+                    <Input
+                        value={columnName}
+                        onChange={(e) => setColumnName(e.target.value)}
+                        placeholder="New column name"
+                        style={{ flex: 1 }}
+                    />
+                    <Button type="submit">Add Column</Button>
+                </form>
 
-            <ResizablePanelGroup direction="vertical" className="flex-1">
-                <ResizablePanel defaultSize={70} minSize={30} maxSize={90} className="overflow-auto">
+                <div className="flex-1 overflow-auto">
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCenter}
@@ -185,31 +176,11 @@ export function Example() {
 
                             </div>
                         </SortableContext>
+
+                        <AppRightSidebar />
                     </DndContext>
-                </ResizablePanel>
-
-                <ResizableHandle withHandle />
-
-                <ResizablePanel defaultSize={30} minSize={10}>
-                    <div style={{ padding: 16 }}>
-                        <Column id="library" name="Library" onAddItem={createLibraryItem}>
-                            <SortableContext
-                                items={libraryItems.map((i) => i.id)}
-                                strategy={verticalListSortingStrategy}
-                            >
-                                {libraryItems.map((item, index) => (
-                                    <Item
-                                        key={item.id}
-                                        item={item}
-                                        index={index}
-                                        column="library"
-                                    />
-                                ))}
-                            </SortableContext>
-                        </Column>
-                    </div>
-                </ResizablePanel>
-            </ResizablePanelGroup>
+                </div>
+            </div>
         </div>
     )
 }
