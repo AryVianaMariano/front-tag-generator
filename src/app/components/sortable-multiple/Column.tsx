@@ -36,7 +36,11 @@ export function Column({ id, name, width = COLUMN_WIDTH, children, onAddItem }: 
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
-        maxHeight: '70vh',
+        height: 'auto',
+        maxHeight: '100%',
+        overflowY: 'auto',
+        minHeight: 0,                // Permite redução de tamanho
+        overflow: 'hidden',          // Esconde estouros
     }
 
 
@@ -82,9 +86,10 @@ export function Column({ id, name, width = COLUMN_WIDTH, children, onAddItem }: 
             <Separator />
             {/* Conteúdo expansível */}
 
-            <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {children}
             </div>
+
 
 
             {/* Formulário de adicionar item */}

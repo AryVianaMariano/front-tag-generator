@@ -21,11 +21,12 @@ import { Item, ItemData } from './Item'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { v4 as uuidv4 } from 'uuid'
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 
 const boardStyle: React.CSSProperties = {
     display: 'grid',
     gridTemplateColumns: `repeat(5, ${COLUMN_WIDTH}px)`,
-    alignItems: 'stretch',
+    alignItems: 'start',       // deixa colunas com altura própria
     gap: 20,
     padding: 20,
     backgroundColor: '#f0f2f5',
@@ -33,10 +34,8 @@ const boardStyle: React.CSSProperties = {
     border: '1px solid #ccc',
     overflowX: 'auto',
     overflowY: 'auto',
-    maxHeight: '70vh',
+    height: '100%',            // cresce com o painel
 }
-
-
 
 export function Example() {
     const [columns, setColumns] = React.useState([
@@ -125,7 +124,6 @@ export function Example() {
     }
 
     return (
-
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
             <form
                 onSubmit={handleColumnSubmit}
@@ -140,43 +138,48 @@ export function Example() {
                 <Button type="submit">Add Column</Button>
             </form>
 
-            <div style={{ flex: 1, minHeight: 0 }}>
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragOver={handleDragOver}
-                    onDragEnd={handleDragEnd}
-                >
-                    <SortableContext
-                        items={columns.map((col) => col.id)}
-                        strategy={rectSortingStrategy}
+            <ResizablePanelGroup direction="vertical" className="flex-1">
+                <ResizablePanel defaultSize={70} minSize={30} maxSize={90} className="overflow-auto">
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragOver={handleDragOver}
+                        onDragEnd={handleDragEnd}
                     >
-                        <div style={boardStyle}>
-                            {columns.map((column) => (
-                                <Column
-                                    key={column.id}
-                                    id={column.id}
-                                    name={column.name}
-                                >
-                                    <SortableContext
-                                        items={items[column.id]?.map((i) => i.id) || []}
-                                        strategy={verticalListSortingStrategy}
-                                    >
-                                        {items[column.id]?.map((item, index) => (
-                                            <Item
-                                                key={item.id}
-                                                item={item}
-                                                index={index}
-                                                column={column.id}
-                                            />
-                                        ))}
-                                    </SortableContext>
-                                </Column>
-                            ))}
-                        </div>
-                    </SortableContext>
+                        <SortableContext
+                            items={columns.map((col) => col.id)}
+                            strategy={rectSortingStrategy}
+                        >
+                            <div style={boardStyle}>
+                                {columns.map((column) => (
+                                    <div style={{ height: '100%', display: 'flex' }} key={column.id}>
+                                        <Column id={column.id} name={column.name}>
+                                            <SortableContext
+                                                items={items[column.id]?.map((i) => i.id) || []}
+                                                strategy={verticalListSortingStrategy}
+                                            >
+                                                {items[column.id]?.map((item, index) => (
+                                                    <Item
+                                                        key={item.id}
+                                                        item={item}
+                                                        index={index}
+                                                        column={column.id}
+                                                    />
+                                                ))}
+                                            </SortableContext>
+                                        </Column>
+                                    </div>
+                                ))}
 
-                    <div style={{ marginTop: 20, padding: 16 }}>
+                            </div>
+                        </SortableContext>
+                    </DndContext>
+                </ResizablePanel>
+
+                <ResizableHandle withHandle />
+
+                <ResizablePanel defaultSize={30} minSize={10}>
+                    <div style={{ padding: 16 }}>
                         <Column id="library" name="Library" onAddItem={addLibraryItem}>
                             <SortableContext
                                 items={items['library'].map((i) => i.id)}
@@ -193,8 +196,8 @@ export function Example() {
                             </SortableContext>
                         </Column>
                     </div>
-                </DndContext>
-            </div>
+                </ResizablePanel>
+            </ResizablePanelGroup>
         </div>
     )
 }
