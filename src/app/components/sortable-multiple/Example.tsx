@@ -13,16 +13,14 @@ import {
 } from '@dnd-kit/core'
 import {
     SortableContext,
-    horizontalListSortingStrategy,
     verticalListSortingStrategy,
+    rectSortingStrategy,
 } from '@dnd-kit/sortable'
 import { Column } from './Column'
 import { Item, ItemData } from './Item'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { v4 as uuidv4 } from 'uuid'
-
-const COLUMN_WIDTH = 240 // largura padrão das colunas
 
 const boardStyle: React.CSSProperties = {
     display: 'flex',
@@ -148,7 +146,7 @@ export function Example() {
                 >
                     <SortableContext
                         items={columns.map((col) => col.id)}
-                        strategy={horizontalListSortingStrategy}
+                        strategy={rectSortingStrategy}
                     >
                         <div style={boardStyle}>
                             {columns.map((column) => (

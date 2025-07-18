@@ -23,7 +23,7 @@ export function Column({ id, name, width = 240, children, onAddItem }: ColumnPro
     const style: React.CSSProperties = {
         transform: CSS.Transform.toString(transform),
         transition,
-        width: 300, // largura fixa em px
+        width,
         padding: 16,
         borderRadius: 10,
         backgroundColor: '#fff',
