@@ -29,11 +29,12 @@ const boardStyle: React.CSSProperties = {
     alignItems: 'stretch',
     gap: 20,
     padding: 20,
-    height: '80vh',
     backgroundColor: '#f0f2f5',
     borderRadius: 8,
     border: '1px solid #ccc',
     overflowX: 'auto',
+    overflowY: 'auto',
+    maxHeight: '70vh',
 }
 
 
@@ -124,10 +125,10 @@ export function Example() {
     }
 
     return (
-        <>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
             <form
                 onSubmit={handleColumnSubmit}
-                style={{ display: 'flex', gap: 4, marginBottom: 20 }}
+                style={{ display: 'flex', gap: 4, padding: 16 }}
             >
                 <Input
                     value={columnName}
@@ -138,60 +139,61 @@ export function Example() {
                 <Button type="submit">Add Column</Button>
             </form>
 
-            <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragOver={handleDragOver}
-                onDragEnd={handleDragEnd}
-            >
-                <SortableContext
-                    items={columns.map((col) => col.id)}
-                    strategy={horizontalListSortingStrategy}
+            <div style={{ flex: 1, minHeight: 0 }}>
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragOver={handleDragOver}
+                    onDragEnd={handleDragEnd}
                 >
-                    <div style={boardStyle}>
-                        {columns.map((column) => (
-                            <Column
-                                key={column.id}
-                                id={column.id}
-                                name={column.name}
-                            >
-                                <SortableContext
-                                    items={items[column.id]?.map((i) => i.id) || []}
-                                    strategy={verticalListSortingStrategy}
+                    <SortableContext
+                        items={columns.map((col) => col.id)}
+                        strategy={horizontalListSortingStrategy}
+                    >
+                        <div style={boardStyle}>
+                            {columns.map((column) => (
+                                <Column
+                                    key={column.id}
+                                    id={column.id}
+                                    name={column.name}
                                 >
-                                    {items[column.id]?.map((item, index) => (
-                                        <Item
-                                            key={item.id}
-                                            item={item}
-                                            index={index}
-                                            column={column.id}
-                                        />
-                                    ))}
-                                </SortableContext>
-                            </Column>
-                        ))}
-
-                    </div>
-                </SortableContext>
-
-                <div style={{ marginTop: 40 }}>
-                    <Column id="library" name="Library" onAddItem={addLibraryItem}>
-                        <SortableContext
-                            items={items['library'].map((i) => i.id)}
-                            strategy={verticalListSortingStrategy}
-                        >
-                            {items['library'].map((item, index) => (
-                                <Item
-                                    key={item.id}
-                                    item={item}
-                                    index={index}
-                                    column="library"
-                                />
+                                    <SortableContext
+                                        items={items[column.id]?.map((i) => i.id) || []}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        {items[column.id]?.map((item, index) => (
+                                            <Item
+                                                key={item.id}
+                                                item={item}
+                                                index={index}
+                                                column={column.id}
+                                            />
+                                        ))}
+                                    </SortableContext>
+                                </Column>
                             ))}
-                        </SortableContext>
-                    </Column>
-                </div>
-            </DndContext>
-        </>
+                        </div>
+                    </SortableContext>
+
+                    <div style={{ marginTop: 20, padding: 16 }}>
+                        <Column id="library" name="Library" onAddItem={addLibraryItem}>
+                            <SortableContext
+                                items={items['library'].map((i) => i.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                {items['library'].map((item, index) => (
+                                    <Item
+                                        key={item.id}
+                                        item={item}
+                                        index={index}
+                                        column="library"
+                                    />
+                                ))}
+                            </SortableContext>
+                        </Column>
+                    </div>
+                </DndContext>
+            </div>
+        </div>
     )
 }

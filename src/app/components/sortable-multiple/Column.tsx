@@ -23,8 +23,7 @@ export function Column({ id, name, width = 240, children, onAddItem }: ColumnPro
     const style: React.CSSProperties = {
         transform: CSS.Transform.toString(transform),
         transition,
-        width: 300,              // largura fixa em px
-        height: 600,             // altura fixa em px
+        width: 300, // largura fixa em px
         padding: 16,
         borderRadius: 10,
         backgroundColor: '#fff',
@@ -32,7 +31,7 @@ export function Column({ id, name, width = 240, children, onAddItem }: ColumnPro
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
-        overflow: 'hidden',
+        maxHeight: '70vh',
     }
 
 
@@ -53,7 +52,7 @@ export function Column({ id, name, width = 240, children, onAddItem }: ColumnPro
             </div>
 
             {/* Conteúdo expansível */}
-            <div style={{ flex: 1, overflowY: 'auto' }}>
+            <div style={{ flex: 1 }}>
                 {children}
             </div>
 
