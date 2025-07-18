@@ -44,11 +44,12 @@ export function Item({ item, column, index }: ItemProps) {
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
-        padding: '8px',
-        marginBottom: '6px',
-        background: '#fff',
-        border: '1px solid #ccc',
-        borderRadius: '6px',
+        padding: '10px 12px',
+        marginBottom: '8px',
+        background: '#ffffff',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
         cursor: 'default',
         userSelect: 'none' as const,
     }
@@ -57,21 +58,19 @@ export function Item({ item, column, index }: ItemProps) {
         <div
             ref={setNodeRef}
             style={style}
-            className="flex items-center justify-between gap-2 relative"
+            className="flex items-center justify-between gap-2 hover:shadow-md transition-shadow"
         >
             <div className="flex items-center gap-2">
                 <button
                     {...attributes}
                     {...listeners}
-                    className="p-1 cursor-grab"
+                    className="p-1 cursor-grab text-muted-foreground"
                     tabIndex={-1}
                 >
-                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                    <GripVertical className="w-4 h-4" />
                 </button>
 
-                <span>
-                    {index + 1}. {item.name}
-                </span>
+                <span className="text-sm font-medium">{index + 1}. {item.name}</span>
             </div>
 
             <Button

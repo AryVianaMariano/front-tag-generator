@@ -22,7 +22,16 @@ export interface ColumnProps {
 }
 
 
-export function Column({ children, id, name, onAddItem, width }: ColumnProps) {
+export interface ColumnProps {
+    id: string
+    name: string
+    width?: number
+    children?: React.ReactNode
+    onAddItem?: (name: string) => void
+    style?: React.CSSProperties
+}
+
+export function Column({ children, id, name, onAddItem, width, style = {} }: ColumnProps) {
     const { setNodeRef } = useDroppable({ id })
 
     const [itemName, setItemName] = React.useState('')
@@ -34,23 +43,23 @@ export function Column({ children, id, name, onAddItem, width }: ColumnProps) {
         setItemName('')
     }
 
-    const styles: React.CSSProperties = {
+    const defaultStyles: React.CSSProperties = {
         display: 'flex',
         flexDirection: 'column',
         gap: 10,
         padding: 20,
+        width: width || 200,
         minWidth: width || 200,
-        width: width,
-        height: 'auto', // <-- garante altura independente
-        backgroundColor: 'rgba(0,0,0,0.05)',
-        borderRadius: 10,
+        height: 'auto',
+        backgroundColor: '#f8f9fa',
+        borderRadius: 12,
+        boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
         boxSizing: 'border-box',
     }
 
-
     return (
-        <div style={styles} ref={setNodeRef}>
-            <h2>{name}</h2>
+        <div style={{ ...defaultStyles, ...style }} ref={setNodeRef}>
+            <h2 className="font-semibold text-gray-700 mb-2">{name}</h2>
             {children}
             {onAddItem && (
                 <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 4 }}>
