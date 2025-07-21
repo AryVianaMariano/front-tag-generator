@@ -58,6 +58,15 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
 
     const [poolItems, setPoolItems] = useState<ItemData[]>([])
     const [activeItem, setActiveItem] = useState<ItemData | null>(null)
+    const [activeContainer, setActiveContainer] = useState<string | null>(null)
+
+    const getContainer = (id: string): string | null => {
+        if (poolItems.some((i) => i.id === id)) return 'POOL'
+        for (const key of Object.keys(items)) {
+            if (items[key].some((i) => i.id === id)) return key
+        }
+        return null
+    }
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -80,6 +89,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
         const { active } = event
         const activeId = String(active.id)
         const activeType = active.data.current?.type
+        setActiveContainer(getContainer(activeId))
         if (activeType === 'poolItem') {
             const item = poolItems.find((i) => i.id === activeId)
             setActiveItem(item || null)
@@ -97,59 +107,37 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
         if (!active || !over) return
 
         const activeId = String(active.id)
-        const activeType = active.data.current?.type
-        const sourceColumn = active.data.current?.column as string | undefined
-
         const targetColumn = (over.data.current?.column as string) || String(over.id)
-        const isTargetPool = targetColumn === 'POOL'
 
-        if (activeType === 'poolItem' && targetColumn && !isTargetPool) {
-            const dragged = poolItems.find((i) => i.id === activeId)
-            if (!dragged) return
+        if (!targetColumn) return
 
-            setPoolItems((prev) => prev.filter((i) => i.id !== activeId))
-            setItems((prev) => ({
-                ...prev,
-                [targetColumn]: [...(prev[targetColumn] || []), dragged],
-            }))
-            return
-        }
+        if (activeContainer && activeContainer !== targetColumn) {
+            const currentContainer = activeContainer
+            const item =
+                currentContainer === 'POOL'
+                    ? poolItems.find((i) => i.id === activeId)
+                    : items[currentContainer]?.find((i) => i.id === activeId)
+            if (!item) return
 
-        if (
-            activeType === 'item' &&
-            sourceColumn &&
-            isTargetPool
-        ) {
-            const dragged = items[sourceColumn].find((i) => i.id === activeId)
-            if (!dragged) return
+            if (currentContainer === 'POOL') {
+                setPoolItems((prev) => prev.filter((i) => i.id !== activeId))
+            } else {
+                setItems((prev) => ({
+                    ...prev,
+                    [currentContainer]: prev[currentContainer].filter((i) => i.id !== activeId),
+                }))
+            }
 
-            setItems((prev) => ({
-                ...prev,
-                [sourceColumn]: prev[sourceColumn].filter((i) => i.id !== activeId),
-            }))
+            if (targetColumn === 'POOL') {
+                setPoolItems((prev) => [...prev, item])
+            } else {
+                setItems((prev) => ({
+                    ...prev,
+                    [targetColumn]: [...(prev[targetColumn] || []), item],
+                }))
+            }
 
-            setPoolItems((prev) => [...prev, dragged])
-            return
-        }
-
-        if (
-            activeType === 'item' &&
-            sourceColumn &&
-            targetColumn &&
-            sourceColumn !== targetColumn
-        ) {
-            const dragged = items[sourceColumn].find((i) => i.id === activeId)
-            if (!dragged) return
-
-            setItems((prev) => ({
-                ...prev,
-                [sourceColumn]: prev[sourceColumn].filter((i) => i.id !== activeId),
-            }))
-
-            setItems((prev) => ({
-                ...prev,
-                [targetColumn]: [...(prev[targetColumn] || []), dragged],
-            }))
+            setActiveContainer(targetColumn)
         }
     }
 
@@ -157,15 +145,14 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
         const { active, over } = event
         if (!active || !over) {
             setActiveItem(null)
+            setActiveContainer(null)
             return
         }
 
         const activeId = String(active.id)
         const overId = String(over.id)
         const activeType = active.data.current?.type
-        const sourceColumn = active.data.current?.column as string | undefined
         const targetColumn = (over.data.current?.column as string) || overId
-        const overType = over.data.current?.type
 
         // Reorder columns
         if (!activeType) {
@@ -179,33 +166,21 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Reorder items or move between columns
-        if (activeType === 'item' && sourceColumn) {
-            setItems((prev) => {
-                const sourceItems = Array.from(prev[sourceColumn])
-                const activeIndex = sourceItems.findIndex((i) => i.id === activeId)
-                if (activeIndex === -1) return prev
-
-                const newState = { ...prev }
-
-                if (sourceColumn === targetColumn) {
+        if (activeType === 'item' && activeContainer) {
+            if (activeContainer === targetColumn) {
+                setItems((prev) => {
+                    const sourceItems = Array.from(prev[targetColumn])
+                    const activeIndex = sourceItems.findIndex((i) => i.id === activeId)
                     const overIndex = sourceItems.findIndex((i) => i.id === overId)
-                    if (overIndex !== -1 && activeIndex !== overIndex) {
-                        newState[sourceColumn] = arrayMove(sourceItems, activeIndex, overIndex)
+                    if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) {
+                        return prev
                     }
-                } else {
-                    const targetItems = Array.from(prev[targetColumn] || [])
-                    const overIndex =
-                        overType === 'item'
-                            ? targetItems.findIndex((i) => i.id === overId)
-                            : targetItems.length
-                    const [moved] = sourceItems.splice(activeIndex, 1)
-                    targetItems.splice(overIndex, 0, moved)
-                    newState[sourceColumn] = sourceItems
-                    newState[targetColumn] = targetItems
-                }
-
-                return newState
-            })
+                    return {
+                        ...prev,
+                        [targetColumn]: arrayMove(sourceItems, activeIndex, overIndex),
+                    }
+                })
+            }
         }
 
         // Reorder items in the pool
@@ -218,6 +193,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
         }
 
         setActiveItem(null)
+        setActiveContainer(null)
     }
 
     return (
