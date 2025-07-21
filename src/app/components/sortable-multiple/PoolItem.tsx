@@ -1,3 +1,4 @@
+// PoolItem.tsx
 'use client'
 
 import { useSortable } from '@dnd-kit/sortable'
@@ -7,7 +8,7 @@ import { ItemData } from './Item'
 export function PoolItem({ item }: { item: ItemData }) {
     const { setNodeRef, attributes, listeners, transform, transition } = useSortable({
         id: item.id,
-        data: { type: 'poolItem' },
+        data: { type: 'poolItem', column: 'POOL' }, // <-- FIX: Adicionado column
     })
 
     const style: React.CSSProperties = {
