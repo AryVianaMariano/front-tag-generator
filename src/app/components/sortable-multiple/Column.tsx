@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
-import { useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -18,12 +17,32 @@ export interface ColumnProps {
     name: string
     width?: number
     children?: React.ReactNode
+    /**
+     * IDs of the items contained in this column. Used to correctly
+     * determine drop targets when dragging between columns.
+     */
+    items?: string[]
     onAddItem?: (name: string) => void
 }
 
-export function Column({ id, name, width = COLUMN_WIDTH, children, onAddItem }: ColumnProps) {
-    const { setNodeRef: setSortableRef, attributes, listeners, transform, transition } = useSortable({ id })
-    const { setNodeRef: setDroppableRef } = useDroppable({ id, data: { column: id } })
+export function Column({ id, name, width = COLUMN_WIDTH, children, items = [], onAddItem }: ColumnProps) {
+    const {
+        setNodeRef,
+        attributes,
+        listeners,
+        transform,
+        transition,
+        active,
+        over,
+        isDragging,
+    } = useSortable({
+        id,
+        data: { type: 'container', children: items },
+    })
+
+    const isOverContainer = over
+        ? (id === over.id && active?.data.current?.type !== 'container') || items.includes(String(over.id))
+        : false
 
     const [itemName, setItemName] = React.useState('')
 
@@ -33,7 +52,6 @@ export function Column({ id, name, width = COLUMN_WIDTH, children, onAddItem }: 
         width,
         padding: 16,
         borderRadius: 10,
-        backgroundColor: '#fff',
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
         display: 'flex',
         flexDirection: 'column',
@@ -45,13 +63,15 @@ export function Column({ id, name, width = COLUMN_WIDTH, children, onAddItem }: 
     }
 
 
-    const setRef = (node: HTMLElement | null) => {
-        setSortableRef(node)
-        setDroppableRef(node)
-    }
-
     return (
-        <div ref={setRef} style={style}>
+        <div
+            ref={setNodeRef}
+            style={{
+                ...style,
+                opacity: isDragging ? 0.5 : undefined,
+                backgroundColor: isOverContainer ? '#f5f5f5' : '#fff',
+            }}
+        >
             {/* Cabeçalho */}
             <div className="flex items-center justify-between shrink-0">
                 <h2 className="font-semibold text-sm">{name}</h2>

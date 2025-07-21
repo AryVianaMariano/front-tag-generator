@@ -64,8 +64,11 @@ export function Example() {
                                     style={{ height: '100%', display: 'flex' }}
                                     key={column.id}
                                 >
-                                    <Column id={column.id} name={column.name}>
-                                        <SortableContext
+<Column
+                                        id={column.id}
+                                        name={column.name}
+                                        items={items[column.id]?.map((i) => i.id) || []}
+                                    >                                        <SortableContext
                                             items={
                                                 items[column.id]?.map((i) => i.id) || []
                                             }

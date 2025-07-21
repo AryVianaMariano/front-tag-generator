@@ -70,9 +70,10 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     )
 
     const getContainer = (id: string): string | null => {
-        if (poolItems.some(i => i.id === id)) return 'POOL'
+        if (id === 'POOL' || poolItems.some((i) => i.id === id)) return 'POOL'
+        if (id in items) return id
         for (const key in items) {
-            if (items[key].some(i => i.id === id)) return key
+            if (items[key].some((i) => i.id === id)) return key
         }
         return null
     }
