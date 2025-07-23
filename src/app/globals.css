@@ -120,3 +120,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+.column {
+    position: relative;
+    z-index: 0;
+}

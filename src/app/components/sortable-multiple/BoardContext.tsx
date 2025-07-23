@@ -1,9 +1,9 @@
-// BoardContext.tsx
 'use client'
 
 import React, { createContext, useContext, useState } from 'react'
 import {
     DndContext,
+    DragOverlay,
     closestCenter,
     useSensor,
     useSensors,
@@ -11,11 +11,11 @@ import {
     KeyboardSensor,
     DragStartEvent,
     DragOverEvent,
-    DragEndEvent,
 } from '@dnd-kit/core'
-import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+
 import { ItemData } from './Item'
 import { v4 as uuidv4 } from 'uuid'
+import { DragItem } from './DragItem'
 
 interface ColumnData {
     id: string
@@ -61,6 +61,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     })
 
     const [poolItems, setPoolItems] = useState<ItemData[]>([])
+    const [activeItem, setActiveItem] = useState<ItemData | null>(null)
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -89,7 +90,16 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
         setPoolItems(prev => [...prev, newItem])
     }
 
-    const handleDragStart = (_event: DragStartEvent) => {}
+    const handleDragStart = ({ active }: DragStartEvent) => {
+        const id = String(active.id)
+        const container = getContainer(id)
+        if (!container) return
+        const item =
+            container === 'POOL'
+                ? poolItems.find((i) => i.id === id)
+                : items[container]?.find((i) => i.id === id)
+        if (item) setActiveItem(item)
+    }
 
     const handleDragOver = ({ active, over }: DragOverEvent) => {
         if (!active || !over) return
@@ -128,7 +138,9 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    const handleDragEnd = (_event: DragEndEvent) => {}
+    const handleDragEnd = () => {
+        setActiveItem(null)
+    }
 
     return (
         <BoardContext.Provider value={{ columns, items, poolItems, addColumn, addPoolItem }}>
@@ -140,6 +152,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
                 onDragEnd={handleDragEnd}
             >
                 {children}
+                <DragOverlay>{activeItem && <DragItem item={activeItem} />}</DragOverlay>
             </DndContext>
         </BoardContext.Provider>
     )

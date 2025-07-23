@@ -26,6 +26,7 @@ export interface ColumnProps {
 }
 
 export function Column({ id, name, width = COLUMN_WIDTH, children, items = [], onAddItem }: ColumnProps) {
+    
     const {
         setNodeRef,
         attributes,
@@ -60,6 +61,8 @@ export function Column({ id, name, width = COLUMN_WIDTH, children, items = [], o
         maxHeight: '100%',
         overflowY: 'auto',
         minHeight: 0,                // Permite redução de tamanho
+        zIndex: isDragging ? 500 : 'auto',
+        position: isDragging ? 'relative' : 'static',
     }
 
 

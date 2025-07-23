@@ -19,11 +19,17 @@ export interface ItemProps {
 }
 
 export function Item({ item, column, index }: ItemProps) {
-    const { setNodeRef, attributes, listeners, transform, transition } =
-        useSortable({
-            id: item.id,
-            data: { column, type: 'item' },
-        })
+    const {
+        setNodeRef,
+        attributes,
+        listeners,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({
+        id: item.id,
+        data: { column, type: 'item' },
+    })
 
     const [popupOpen, setPopupOpen] = useState(false)
     const buttonRef = useRef<HTMLButtonElement>(null)
@@ -42,17 +48,20 @@ export function Item({ item, column, index }: ItemProps) {
     }
 
     const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        padding: '10px 12px',
-        marginBottom: '8px',
-        background: '#ffffff',
-        border: '1px solid #ddd',
-        borderRadius: '8px',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-        cursor: 'default',
-        userSelect: 'none' as const,
-    }
+    transform: CSS.Transform.toString(transform),
+    transition,
+    padding: '10px 12px',
+    marginBottom: '8px',
+    background: '#ffffff',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+    cursor: 'default',
+    userSelect: 'none' as const,
+    position: 'relative' as const, // <-- garantido
+    zIndex: isDragging ? 9999 : 'auto', // <-- para ficar acima das colunas
+}
+
 
     return (
         <div
