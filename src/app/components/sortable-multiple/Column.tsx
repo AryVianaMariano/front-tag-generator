@@ -9,6 +9,7 @@ import { GripHorizontal, MoreVertical } from 'lucide-react'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { Label } from '@radix-ui/react-label'
 import { Separator } from "@/components/ui/separator"
+import { useBoard } from './BoardContext'
 
 export const COLUMN_WIDTH = 240
 
@@ -26,6 +27,8 @@ export interface ColumnProps {
 }
 
 export function Column({ id, name, width = COLUMN_WIDTH, children, items = [], onAddItem }: ColumnProps) {
+
+    const { selectedColumn, selectColumn, selectItem, removeColumn } = useBoard()
     
     const {
         setNodeRef,
@@ -69,10 +72,15 @@ export function Column({ id, name, width = COLUMN_WIDTH, children, items = [], o
     return (
         <div
             ref={setNodeRef}
+            onClick={() => {
+                selectColumn(id)
+                selectItem(null)
+            }}
             style={{
                 ...style,
                 opacity: isDragging ? 0.5 : undefined,
                 backgroundColor: isOverContainer ? '#f5f5f5' : '#fff',
+                outline: selectedColumn === id ? '2px solid #3b82f6' : undefined,
             }}
         >
             {/* Cabeçalho */}
@@ -107,6 +115,13 @@ export function Column({ id, name, width = COLUMN_WIDTH, children, items = [], o
                                     Salvar
                                 </Button>
                             </div>
+                            <Button
+                                variant="destructive"
+                                className="mt-2 w-full"
+                                onClick={() => removeColumn(id)}
+                            >
+                                Deletar coluna
+                            </Button>
                         </PopoverContent>
                     </Popover>
                 </div>

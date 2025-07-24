@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/components/ui/button'
 import { MoreVertical, GripVertical } from 'lucide-react'
 import { DraggablePopup } from './components/DraggablePopup'
+import { useBoard } from './BoardContext'
 
 export interface ItemData {
     id: string
@@ -19,6 +20,7 @@ export interface ItemProps {
 }
 
 export function Item({ item, column, index }: ItemProps) {
+    const { selectedItem, selectItem, selectColumn, removeItem } = useBoard()
     const {
         setNodeRef,
         attributes,
@@ -66,7 +68,14 @@ export function Item({ item, column, index }: ItemProps) {
     return (
         <div
             ref={setNodeRef}
-            style={style}
+            onClick={() => {
+                selectItem(item.id)
+                selectColumn(null)
+            }}
+            style={{
+                ...style,
+                outline: selectedItem === item.id ? '2px solid #3b82f6' : undefined,
+            }}
             className="flex items-center justify-between gap-2 hover:shadow-md transition-shadow"
         >
             <div className="flex items-center gap-2">
@@ -98,7 +107,19 @@ export function Item({ item, column, index }: ItemProps) {
                     initialPosition={initialPos}
                     onClose={() => setPopupOpen(false)}
                 >
-                    <div className="text-sm">Popup para {item.name}</div>
+                    <div className="text-sm space-y-2">
+                        <div>Opções para {item.name}</div>
+                        <Button
+                            variant="destructive"
+                            className="w-full"
+                            onClick={() => {
+                                removeItem(item.id)
+                                setPopupOpen(false)
+                            }}
+                        >
+                            Deletar item
+                        </Button>
+                    </div>
                 </DraggablePopup>
             )}
         </div>

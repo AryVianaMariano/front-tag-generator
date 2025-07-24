@@ -26,8 +26,14 @@ interface BoardContextValue {
     columns: ColumnData[]
     items: Record<string, ItemData[]>
     poolItems: ItemData[]
+    selectedColumn: string | null
+    selectedItem: string | null
     addColumn: (name: string) => void
     addPoolItem: (name: string) => void
+    removeColumn: (id: string) => void
+    removeItem: (id: string) => void
+    selectColumn: (id: string | null) => void
+    selectItem: (id: string | null) => void
 }
 
 const BoardContext = createContext<BoardContextValue | null>(null)
@@ -62,6 +68,8 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
 
     const [poolItems, setPoolItems] = useState<ItemData[]>([])
     const [activeItem, setActiveItem] = useState<ItemData | null>(null)
+    const [selectedColumn, setSelectedColumn] = useState<string | null>(null)
+    const [selectedItem, setSelectedItem] = useState<string | null>(null)
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -88,6 +96,30 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     const addPoolItem = (name: string) => {
         const newItem: ItemData = { id: uuidv4(), name }
         setPoolItems(prev => [...prev, newItem])
+    }
+
+    const removeColumn = (id: string) => {
+        setColumns(prev => prev.filter(col => col.id !== id))
+        setItems(prev => {
+            const copy = { ...prev }
+            delete copy[id]
+            return copy
+        })
+        if (selectedColumn === id) setSelectedColumn(null)
+    }
+
+    const removeItem = (id: string) => {
+        setPoolItems(prev => prev.filter(item => item.id !== id))
+        setItems(prev => {
+            const copy = { ...prev }
+            for (const key in copy) {
+                if (copy[key].some(i => i.id === id)) {
+                    copy[key] = copy[key].filter(i => i.id !== id)
+                }
+            }
+            return copy
+        })
+        if (selectedItem === id) setSelectedItem(null)
     }
 
     const handleDragStart = ({ active }: DragStartEvent) => {
@@ -142,8 +174,25 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
         setActiveItem(null)
     }
 
+    const selectColumn = (id: string | null) => setSelectedColumn(id)
+    const selectItem = (id: string | null) => setSelectedItem(id)
+
     return (
-        <BoardContext.Provider value={{ columns, items, poolItems, addColumn, addPoolItem }}>
+        <BoardContext.Provider
+            value={{
+                columns,
+                items,
+                poolItems,
+                selectedColumn,
+                selectedItem,
+                addColumn,
+                addPoolItem,
+                removeColumn,
+                removeItem,
+                selectColumn,
+                selectItem,
+            }}
+        >
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}

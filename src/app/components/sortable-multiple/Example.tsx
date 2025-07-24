@@ -27,7 +27,15 @@ const boardStyle: React.CSSProperties = {
 }
 
 export function Example() {
-    const { columns, items, addColumn } = useBoard()
+    const {
+        columns,
+        items,
+        addColumn,
+        removeColumn,
+        removeItem,
+        selectedColumn,
+        selectedItem,
+    } = useBoard()
     const [columnName, setColumnName] = React.useState('')
 
     const handleColumnSubmit = (e: React.FormEvent) => {
@@ -36,6 +44,20 @@ export function Example() {
         addColumn(columnName.trim())
         setColumnName('')
     }
+
+    React.useEffect(() => {
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (selectedItem) {
+                    removeItem(selectedItem)
+                } else if (selectedColumn) {
+                    removeColumn(selectedColumn)
+                }
+            }
+        }
+        window.addEventListener('keydown', handleKey)
+        return () => window.removeEventListener('keydown', handleKey)
+    }, [selectedItem, selectedColumn, removeItem, removeColumn])
 
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
